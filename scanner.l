@@ -53,3 +53,63 @@ FLOAT       {DIGIT}+\.{DIGIT}+
     return INT_NUM; 
 }
 
+\"[^\"\\]*\"    {
+    yylval.string_value = strdup(yytext);
+    print_token("STR_CONST", yytext);
+    return STR_CONST;
+}
+
+"//".*  { /* Single-line comment */ }
+"/*"([^*]|\*+[^*/])*\*+"/"   {
+    /* Multi-line comment */
+    for (int i = 0; i < yyleng; i++) {
+        if (yytext[i] == '\n') line_number++;
+    }
+}
+
+{ID}    {
+    yylval.string_value = strdup(yytext);
+    print_token("NAME", yytext);
+    return NAME;
+}
+
+"=" { print_token("ASSIGN_OP", yytext); return ASSIGN_OP; }
+"+" { print_token("PLUS", yytext); return PLUS; }
+"-" { print_token("MINUS", yytext); return MINUS; }
+"*" { print_token("MULT", yytext); return MULT; }
+"/" { print_token("DIV", yytext); return DIV; }
+"&" { print_token("ADDRESSOF", yytext); return ADDRESSOF; }
+
+"<" { print_token("LESS_THAN", yytext); return LESS_THAN; }
+"<=" { print_token("LESS_THAN_EQUAL", yytext); return LESS_THAN_EQUAL; }
+">" { print_token("GREATER_THAN", yytext); return GREATER_THAN; }
+">=" { print_token("GREATER_THAN_EQUAL", yytext); return GREATER_THAN_EQUAL; }
+"==" { print_token("EQUAL", yytext); return EQUAL; }
+"!=" { print_token("NOT_EQUAL", yytext); return NOT_EQUAL; }
+
+"&&" { print_token("AND", yytext); return AND; }
+"||" { print_token("OR", yytext); return OR; }
+"!" { print_token("NOT", yytext); return NOT; }
+
+
+"(" { print_token("LEFT_ROUND_BRACKET", yytext); return LEFT_ROUND_BRACKET; }
+")" { print_token("RIGHT_ROUND_BRACKET", yytext); return RIGHT_ROUND_BRACKET; }
+"{" { print_token("LEFT_CURLY_BRACKET", yytext); return LEFT_CURLY_BRACKET; }
+"}" { print_token("RIGHT_CURLY_BRACKET", yytext); return RIGHT_CURLY_BRACKET; }
+"[" { print_token("LEFT_SQUARE_BRACKET", yytext); return LEFT_SQUARE_BRACKET; }
+"]" { print_token("RIGHT_SQUARE_BRACKET", yytext); return RIGHT_SQUARE_BRACKET; }
+";" { print_token("SEMICOLON", yytext); return SEMICOLON; }
+"," { print_token("COMMA", yytext); return COMMA; }
+
+.   {
+    fprintf(stderr, "Error: Illegal character '%s' at line %d\n", yytext, line_number);
+    return -1;
+}
+
+%%
+
+void print_token(const char *token_name, const char *lexeme) {
+    if (show_tokens && tokens_file) {
+        fprintf(tokens_file, "Token Name: %s \t Lexeme: %s \t Line Number: %d\n", token_name, lexeme, line_number);
+    }
+}
