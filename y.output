@@ -1,0 +1,4341 @@
+Useless nonterminals
+
+   assignment_expression
+
+
+Useless rules
+
+  157 assignment_expression: postfix_expression ASSIGN_OP expression
+
+
+State 91 conflicts: 1 shift/reduce
+State 137 conflicts: 5 shift/reduce
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: top_decl_list
+
+    2 top_decl_list: top_decl_list top_decl
+    3              | top_decl
+
+    4 @1: /* empty */
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @1 proc_tail
+
+    6 @2: /* empty */
+
+    7 top_decl: scalar_type NAME @2 typed_name_tail
+    8         | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+    9         | scalar_type MULT NAME SEMICOLON
+   10         | STRUCT NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON
+
+   11 field_list: field_decl
+   12           | field_list field_decl
+
+   13 field_decl: scalar_type NAME SEMICOLON
+
+   14 @3: /* empty */
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @3 proc_tail
+   16                | SEMICOLON
+
+   17 @4: /* empty */
+
+   18 typed_name_tail: COMMA @4 global_var_tail SEMICOLON
+
+   19 global_var_tail: NAME
+   20                | global_var_tail COMMA NAME
+
+   21 proc_tail: SEMICOLON
+
+   22 @5: /* empty */
+
+   23 proc_tail: @5 procedure_body
+
+   24 procedure_body: LEFT_CURLY_BRACKET local_decl_list statement_list RIGHT_CURLY_BRACKET
+
+   25 local_decl_list: local_decl_list local_decl
+   26                | /* empty */
+
+   27 local_decl: scalar_type NAME SEMICOLON
+
+   28 @6: /* empty */
+
+   29 local_decl: scalar_type NAME COMMA @6 local_var_list SEMICOLON
+   30           | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+   31           | scalar_type MULT NAME SEMICOLON
+
+   32 @7: /* empty */
+
+   33 local_decl: scalar_type MULT NAME COMMA @7 ptr_var_list SEMICOLON
+   34           | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+   35 scalar_type: INTEGER
+   36            | FLOAT
+   37            | BOOL
+   38            | STRING
+
+   39 local_var_list: NAME
+   40               | local_var_list COMMA NAME
+
+   41 ptr_var_list: MULT NAME
+   42             | ptr_var_list COMMA MULT NAME
+
+   43 param_list: /* empty */
+   44           | param_list_nonempty
+
+   45 param_list_nonempty: scalar_type NAME
+   46                    | scalar_type MULT NAME
+   47                    | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+   48                    | param_list_nonempty COMMA scalar_type NAME
+   49                    | param_list_nonempty COMMA scalar_type MULT NAME
+   50                    | param_list_nonempty COMMA scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+   51 statement_list: /* empty */
+   52               | statement_list statement
+
+   53 statement: assignment_statement
+   54          | print_statement
+   55          | read_statement
+   56          | while_statement
+   57          | do_while_statement
+   58          | for_statement
+   59          | if_else_statement
+   60          | if_statement
+   61          | return_statement
+   62          | call_statement
+   63          | incr_decr_statement
+   64          | compound_assign_statement
+   65          | throw_statement
+   66          | try_catch_statement
+   67          | SEMICOLON
+
+   68 optional_statement: /* empty */
+   69                   | assignment_statement
+   70                   | incr_decr_statement
+   71                   | compound_assign_statement
+
+   72 for_update: /* empty */
+   73           | postfix_expression ASSIGN_OP expression
+   74           | postfix_expression INCR
+   75           | postfix_expression DECR
+   76           | INCR postfix_expression
+   77           | DECR postfix_expression
+   78           | postfix_expression PLUS_ASSIGN expression
+   79           | postfix_expression MINUS_ASSIGN expression
+   80           | postfix_expression MULT_ASSIGN expression
+   81           | postfix_expression DIV_ASSIGN expression
+
+   82 optional_expression: /* empty */
+   83                    | expression
+
+   84 call_statement: NAME LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET SEMICOLON
+
+   85 return_statement: RETURN SEMICOLON
+   86                 | RETURN expression SEMICOLON
+
+   87 body_statement: compound_statement
+   88               | statement
+
+   89 compound_statement: LEFT_CURLY_BRACKET statement_list RIGHT_CURLY_BRACKET
+
+   90 while_statement: WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement
+
+   91 do_while_statement: DO body_statement WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement ELSE body_statement
+
+   94 if_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement
+
+   95 assignment_statement: postfix_expression ASSIGN_OP expression SEMICOLON
+   96                     | MULT unary_expression ASSIGN_OP expression SEMICOLON
+
+   97 print_statement: WRITE expression SEMICOLON
+
+   98 read_statement: READ postfix_expression SEMICOLON
+
+   99 expression: ternary_expression
+
+  100 ternary_expression: logical_or_expression
+  101                   | logical_or_expression QUESTION_MARK expression COLON ternary_expression
+
+  102 logical_or_expression: logical_and_expression
+  103                      | logical_or_expression OR logical_and_expression
+
+  104 logical_and_expression: logical_not_expression
+  105                       | logical_and_expression AND logical_not_expression
+
+  106 logical_not_expression: relational_expression
+  107                       | NOT logical_not_expression
+
+  108 relational_expression: additive_expression
+  109                      | relational_expression LESS_THAN additive_expression
+  110                      | relational_expression LESS_THAN_EQUAL additive_expression
+  111                      | relational_expression GREATER_THAN additive_expression
+  112                      | relational_expression GREATER_THAN_EQUAL additive_expression
+  113                      | relational_expression EQUAL additive_expression
+  114                      | relational_expression NOT_EQUAL additive_expression
+
+  115 additive_expression: multiplicative_expression
+  116                    | additive_expression PLUS multiplicative_expression
+  117                    | additive_expression MINUS multiplicative_expression
+
+  118 multiplicative_expression: unary_expression
+  119                          | multiplicative_expression MULT unary_expression
+  120                          | multiplicative_expression DIV unary_expression
+
+  121 unary_expression: postfix_expression
+  122                 | INCR unary_expression
+  123                 | DECR unary_expression
+  124                 | MINUS unary_expression
+  125                 | MULT unary_expression
+  126                 | ADDRESSOF unary_expression
+
+  127 postfix_expression: primary_expression
+  128                   | postfix_expression INCR
+  129                   | postfix_expression DECR
+  130                   | postfix_expression LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression DOT NAME
+
+  133 primary_expression: NAME
+  134                   | INT_NUM
+  135                   | FLOAT_NUM
+  136                   | STR_CONST
+  137                   | TRUE_LIT
+  138                   | FALSE_LIT
+  139                   | LEFT_ROUND_BRACKET INTEGER RIGHT_ROUND_BRACKET unary_expression
+  140                   | LEFT_ROUND_BRACKET FLOAT RIGHT_ROUND_BRACKET unary_expression
+  141                   | LEFT_ROUND_BRACKET BOOL RIGHT_ROUND_BRACKET unary_expression
+  142                   | LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET
+
+  143 arg_list: /* empty */
+  144         | arg_list_nonempty
+
+  145 arg_list_nonempty: expression
+  146                  | arg_list_nonempty COMMA expression
+
+  147 incr_decr_statement: postfix_expression INCR SEMICOLON
+  148                    | postfix_expression DECR SEMICOLON
+  149                    | INCR postfix_expression SEMICOLON
+  150                    | DECR postfix_expression SEMICOLON
+
+  151 compound_assign_statement: postfix_expression PLUS_ASSIGN expression SEMICOLON
+  152                          | postfix_expression MINUS_ASSIGN expression SEMICOLON
+  153                          | postfix_expression MULT_ASSIGN expression SEMICOLON
+  154                          | postfix_expression DIV_ASSIGN expression SEMICOLON
+
+  155 throw_statement: THROW expression SEMICOLON
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+VOID (258) 5
+INTEGER (259) 35 139
+FLOAT (260) 36 140
+BOOL (261) 37 141
+STRING (262) 38
+STRUCT (263) 10
+READ (264) 98
+WRITE (265) 97
+RETURN (266) 85 86
+WHILE (267) 90 91
+DO (268) 91
+FOR (269) 92
+IF (270) 93 94
+ELSE (271) 93
+TRY (272) 156
+CATCH (273) 156
+THROW (274) 155
+TRUE_LIT (275) 137
+FALSE_LIT (276) 138
+INCR (277) 74 76 122 128 147 149
+DECR (278) 75 77 123 129 148 150
+PLUS_ASSIGN (279) 78 151
+MINUS_ASSIGN (280) 79 152
+MULT_ASSIGN (281) 80 153
+DIV_ASSIGN (282) 81 154
+NAME (283) 5 7 8 9 10 13 19 20 27 29 30 31 33 34 39 40 41 42 45 46
+    47 48 49 50 84 132 133 156
+INT_NUM (284) 8 30 34 47 50 134
+FLOAT_NUM (285) 135
+STR_CONST (286) 136
+ASSIGN_OP (287) 73 95 96
+PLUS (288) 116
+MINUS (289) 117 124
+MULT (290) 9 31 33 41 42 46 49 96 119 125
+DIV (291) 120
+ADDRESSOF (292) 126
+DOT (293) 132
+LESS_THAN (294) 109
+LESS_THAN_EQUAL (295) 110
+GREATER_THAN (296) 111
+GREATER_THAN_EQUAL (297) 112
+EQUAL (298) 113
+NOT_EQUAL (299) 114
+AND (300) 105
+OR (301) 103
+NOT (302) 107
+QUESTION_MARK (303) 101
+COLON (304) 101
+LEFT_ROUND_BRACKET (305) 5 15 84 90 91 92 93 94 130 139 140 141 142
+    156
+RIGHT_ROUND_BRACKET (306) 5 15 84 90 91 92 93 94 130 139 140 141 142
+    156
+LEFT_CURLY_BRACKET (307) 10 24 89
+RIGHT_CURLY_BRACKET (308) 10 24 89
+LEFT_SQUARE_BRACKET (309) 8 30 34 47 50 131
+RIGHT_SQUARE_BRACKET (310) 8 30 34 47 50 131
+SEMICOLON (311) 8 9 10 13 16 18 21 27 29 30 31 33 34 67 84 85 86 91
+    92 95 96 97 98 147 148 149 150 151 152 153 154 155
+COMMA (312) 18 20 29 33 40 42 48 49 50 146
+LOWER_THAN_ELSE (313)
+DEREF (314)
+UMINUS (315)
+
+
+Nonterminals, with rules where they appear
+
+$accept (61)
+    on left: 0
+program (62)
+    on left: 1, on right: 0
+top_decl_list (63)
+    on left: 2 3, on right: 1 2
+top_decl (64)
+    on left: 5 7 8 9 10, on right: 2 3
+@1 (65)
+    on left: 4, on right: 5
+@2 (66)
+    on left: 6, on right: 7
+field_list (67)
+    on left: 11 12, on right: 10 12
+field_decl (68)
+    on left: 13, on right: 11 12
+typed_name_tail (69)
+    on left: 15 16 18, on right: 7
+@3 (70)
+    on left: 14, on right: 15
+@4 (71)
+    on left: 17, on right: 18
+global_var_tail (72)
+    on left: 19 20, on right: 18 20
+proc_tail (73)
+    on left: 21 23, on right: 5 15
+@5 (74)
+    on left: 22, on right: 23
+procedure_body (75)
+    on left: 24, on right: 23
+local_decl_list (76)
+    on left: 25 26, on right: 24 25
+local_decl (77)
+    on left: 27 29 30 31 33 34, on right: 25
+@6 (78)
+    on left: 28, on right: 29
+@7 (79)
+    on left: 32, on right: 33
+scalar_type (80)
+    on left: 35 36 37 38, on right: 7 8 9 13 27 29 30 31 33 34 45 46
+    47 48 49 50 156
+local_var_list (81)
+    on left: 39 40, on right: 29 40
+ptr_var_list (82)
+    on left: 41 42, on right: 33 42
+param_list (83)
+    on left: 43 44, on right: 5 15
+param_list_nonempty (84)
+    on left: 45 46 47 48 49 50, on right: 44 48 49 50
+statement_list (85)
+    on left: 51 52, on right: 24 52 89
+statement (86)
+    on left: 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67,
+    on right: 52 88
+optional_statement (87)
+    on left: 68 69 70 71, on right: 92
+for_update (88)
+    on left: 72 73 74 75 76 77 78 79 80 81, on right: 92
+optional_expression (89)
+    on left: 82 83, on right: 92
+call_statement (90)
+    on left: 84, on right: 62
+return_statement (91)
+    on left: 85 86, on right: 61
+body_statement (92)
+    on left: 87 88, on right: 90 91 92 93 94
+compound_statement (93)
+    on left: 89, on right: 87 156
+while_statement (94)
+    on left: 90, on right: 56
+do_while_statement (95)
+    on left: 91, on right: 57
+for_statement (96)
+    on left: 92, on right: 58
+if_else_statement (97)
+    on left: 93, on right: 59
+if_statement (98)
+    on left: 94, on right: 60
+assignment_statement (99)
+    on left: 95 96, on right: 53 69
+print_statement (100)
+    on left: 97, on right: 54
+read_statement (101)
+    on left: 98, on right: 55
+expression (102)
+    on left: 99, on right: 73 78 79 80 81 83 86 90 91 93 94 95 96 97
+    101 131 142 145 146 151 152 153 154 155
+ternary_expression (103)
+    on left: 100 101, on right: 99 101
+logical_or_expression (104)
+    on left: 102 103, on right: 100 101 103
+logical_and_expression (105)
+    on left: 104 105, on right: 102 103 105
+logical_not_expression (106)
+    on left: 106 107, on right: 104 105 107
+relational_expression (107)
+    on left: 108 109 110 111 112 113 114, on right: 106 109 110 111
+    112 113 114
+additive_expression (108)
+    on left: 115 116 117, on right: 108 109 110 111 112 113 114 116
+    117
+multiplicative_expression (109)
+    on left: 118 119 120, on right: 115 116 117 119 120
+unary_expression (110)
+    on left: 121 122 123 124 125 126, on right: 96 118 119 120 122
+    123 124 125 126 139 140 141
+postfix_expression (111)
+    on left: 127 128 129 130 131 132, on right: 73 74 75 76 77 78 79
+    80 81 95 98 121 128 129 130 131 132 147 148 149 150 151 152 153
+    154
+primary_expression (112)
+    on left: 133 134 135 136 137 138 139 140 141 142,
+    on right: 127
+arg_list (113)
+    on left: 143 144, on right: 84 130
+arg_list_nonempty (114)
+    on left: 145 146, on right: 144 146
+incr_decr_statement (115)
+    on left: 147 148 149 150, on right: 63 70
+compound_assign_statement (116)
+    on left: 151 152 153 154, on right: 64 71
+throw_statement (117)
+    on left: 155, on right: 65
+try_catch_statement (118)
+    on left: 156, on right: 66
+
+
+state 0
+
+    0 $accept: . program $end
+
+    VOID     shift, and go to state 1
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+    STRUCT   shift, and go to state 6
+
+    program        go to state 7
+    top_decl_list  go to state 8
+    top_decl       go to state 9
+    scalar_type    go to state 10
+
+
+state 1
+
+    5 top_decl: VOID . NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @1 proc_tail
+
+    NAME  shift, and go to state 11
+
+
+state 2
+
+   35 scalar_type: INTEGER .
+
+    $default  reduce using rule 35 (scalar_type)
+
+
+state 3
+
+   36 scalar_type: FLOAT .
+
+    $default  reduce using rule 36 (scalar_type)
+
+
+state 4
+
+   37 scalar_type: BOOL .
+
+    $default  reduce using rule 37 (scalar_type)
+
+
+state 5
+
+   38 scalar_type: STRING .
+
+    $default  reduce using rule 38 (scalar_type)
+
+
+state 6
+
+   10 top_decl: STRUCT . NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON
+
+    NAME  shift, and go to state 12
+
+
+state 7
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 13
+
+
+state 8
+
+    1 program: top_decl_list .
+    2 top_decl_list: top_decl_list . top_decl
+
+    VOID     shift, and go to state 1
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+    STRUCT   shift, and go to state 6
+
+    $default  reduce using rule 1 (program)
+
+    top_decl     go to state 14
+    scalar_type  go to state 10
+
+
+state 9
+
+    3 top_decl_list: top_decl .
+
+    $default  reduce using rule 3 (top_decl_list)
+
+
+state 10
+
+    7 top_decl: scalar_type . NAME @2 typed_name_tail
+    8         | scalar_type . NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+    9         | scalar_type . MULT NAME SEMICOLON
+
+    NAME  shift, and go to state 15
+    MULT  shift, and go to state 16
+
+
+state 11
+
+    5 top_decl: VOID NAME . LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @1 proc_tail
+
+    LEFT_ROUND_BRACKET  shift, and go to state 17
+
+
+state 12
+
+   10 top_decl: STRUCT NAME . LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON
+
+    LEFT_CURLY_BRACKET  shift, and go to state 18
+
+
+state 13
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+state 14
+
+    2 top_decl_list: top_decl_list top_decl .
+
+    $default  reduce using rule 2 (top_decl_list)
+
+
+state 15
+
+    7 top_decl: scalar_type NAME . @2 typed_name_tail
+    8         | scalar_type NAME . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    LEFT_SQUARE_BRACKET  shift, and go to state 19
+
+    $default  reduce using rule 6 (@2)
+
+    @2  go to state 20
+
+
+state 16
+
+    9 top_decl: scalar_type MULT . NAME SEMICOLON
+
+    NAME  shift, and go to state 21
+
+
+state 17
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET . param_list RIGHT_ROUND_BRACKET @1 proc_tail
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    $default  reduce using rule 43 (param_list)
+
+    scalar_type          go to state 22
+    param_list           go to state 23
+    param_list_nonempty  go to state 24
+
+
+state 18
+
+   10 top_decl: STRUCT NAME LEFT_CURLY_BRACKET . field_list RIGHT_CURLY_BRACKET SEMICOLON
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    field_list   go to state 25
+    field_decl   go to state 26
+    scalar_type  go to state 27
+
+
+state 19
+
+    8 top_decl: scalar_type NAME LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    INT_NUM  shift, and go to state 28
+
+
+state 20
+
+    7 top_decl: scalar_type NAME @2 . typed_name_tail
+
+    LEFT_ROUND_BRACKET  shift, and go to state 29
+    SEMICOLON           shift, and go to state 30
+    COMMA               shift, and go to state 31
+
+    typed_name_tail  go to state 32
+
+
+state 21
+
+    9 top_decl: scalar_type MULT NAME . SEMICOLON
+
+    SEMICOLON  shift, and go to state 33
+
+
+state 22
+
+   45 param_list_nonempty: scalar_type . NAME
+   46                    | scalar_type . MULT NAME
+   47                    | scalar_type . NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    NAME  shift, and go to state 34
+    MULT  shift, and go to state 35
+
+
+state 23
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET param_list . RIGHT_ROUND_BRACKET @1 proc_tail
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 36
+
+
+state 24
+
+   44 param_list: param_list_nonempty .
+   48 param_list_nonempty: param_list_nonempty . COMMA scalar_type NAME
+   49                    | param_list_nonempty . COMMA scalar_type MULT NAME
+   50                    | param_list_nonempty . COMMA scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    COMMA  shift, and go to state 37
+
+    $default  reduce using rule 44 (param_list)
+
+
+state 25
+
+   10 top_decl: STRUCT NAME LEFT_CURLY_BRACKET field_list . RIGHT_CURLY_BRACKET SEMICOLON
+   12 field_list: field_list . field_decl
+
+    INTEGER              shift, and go to state 2
+    FLOAT                shift, and go to state 3
+    BOOL                 shift, and go to state 4
+    STRING               shift, and go to state 5
+    RIGHT_CURLY_BRACKET  shift, and go to state 38
+
+    field_decl   go to state 39
+    scalar_type  go to state 27
+
+
+state 26
+
+   11 field_list: field_decl .
+
+    $default  reduce using rule 11 (field_list)
+
+
+state 27
+
+   13 field_decl: scalar_type . NAME SEMICOLON
+
+    NAME  shift, and go to state 40
+
+
+state 28
+
+    8 top_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET SEMICOLON
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 41
+
+
+state 29
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET . param_list RIGHT_ROUND_BRACKET @3 proc_tail
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    $default  reduce using rule 43 (param_list)
+
+    scalar_type          go to state 22
+    param_list           go to state 42
+    param_list_nonempty  go to state 24
+
+
+state 30
+
+   16 typed_name_tail: SEMICOLON .
+
+    $default  reduce using rule 16 (typed_name_tail)
+
+
+state 31
+
+   18 typed_name_tail: COMMA . @4 global_var_tail SEMICOLON
+
+    $default  reduce using rule 17 (@4)
+
+    @4  go to state 43
+
+
+state 32
+
+    7 top_decl: scalar_type NAME @2 typed_name_tail .
+
+    $default  reduce using rule 7 (top_decl)
+
+
+state 33
+
+    9 top_decl: scalar_type MULT NAME SEMICOLON .
+
+    $default  reduce using rule 9 (top_decl)
+
+
+state 34
+
+   45 param_list_nonempty: scalar_type NAME .
+   47                    | scalar_type NAME . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    LEFT_SQUARE_BRACKET  shift, and go to state 44
+
+    $default  reduce using rule 45 (param_list_nonempty)
+
+
+state 35
+
+   46 param_list_nonempty: scalar_type MULT . NAME
+
+    NAME  shift, and go to state 45
+
+
+state 36
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET . @1 proc_tail
+
+    $default  reduce using rule 4 (@1)
+
+    @1  go to state 46
+
+
+state 37
+
+   48 param_list_nonempty: param_list_nonempty COMMA . scalar_type NAME
+   49                    | param_list_nonempty COMMA . scalar_type MULT NAME
+   50                    | param_list_nonempty COMMA . scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    scalar_type  go to state 47
+
+
+state 38
+
+   10 top_decl: STRUCT NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET . SEMICOLON
+
+    SEMICOLON  shift, and go to state 48
+
+
+state 39
+
+   12 field_list: field_list field_decl .
+
+    $default  reduce using rule 12 (field_list)
+
+
+state 40
+
+   13 field_decl: scalar_type NAME . SEMICOLON
+
+    SEMICOLON  shift, and go to state 49
+
+
+state 41
+
+    8 top_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET . SEMICOLON
+
+    SEMICOLON  shift, and go to state 50
+
+
+state 42
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET param_list . RIGHT_ROUND_BRACKET @3 proc_tail
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 51
+
+
+state 43
+
+   18 typed_name_tail: COMMA @4 . global_var_tail SEMICOLON
+
+    NAME  shift, and go to state 52
+
+    global_var_tail  go to state 53
+
+
+state 44
+
+   47 param_list_nonempty: scalar_type NAME LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET
+
+    INT_NUM  shift, and go to state 54
+
+
+state 45
+
+   46 param_list_nonempty: scalar_type MULT NAME .
+
+    $default  reduce using rule 46 (param_list_nonempty)
+
+
+state 46
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @1 . proc_tail
+
+    SEMICOLON  shift, and go to state 55
+
+    $default  reduce using rule 22 (@5)
+
+    proc_tail  go to state 56
+    @5         go to state 57
+
+
+state 47
+
+   48 param_list_nonempty: param_list_nonempty COMMA scalar_type . NAME
+   49                    | param_list_nonempty COMMA scalar_type . MULT NAME
+   50                    | param_list_nonempty COMMA scalar_type . NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    NAME  shift, and go to state 58
+    MULT  shift, and go to state 59
+
+
+state 48
+
+   10 top_decl: STRUCT NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON .
+
+    $default  reduce using rule 10 (top_decl)
+
+
+state 49
+
+   13 field_decl: scalar_type NAME SEMICOLON .
+
+    $default  reduce using rule 13 (field_decl)
+
+
+state 50
+
+    8 top_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON .
+
+    $default  reduce using rule 8 (top_decl)
+
+
+state 51
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET . @3 proc_tail
+
+    $default  reduce using rule 14 (@3)
+
+    @3  go to state 60
+
+
+state 52
+
+   19 global_var_tail: NAME .
+
+    $default  reduce using rule 19 (global_var_tail)
+
+
+state 53
+
+   18 typed_name_tail: COMMA @4 global_var_tail . SEMICOLON
+   20 global_var_tail: global_var_tail . COMMA NAME
+
+    SEMICOLON  shift, and go to state 61
+    COMMA      shift, and go to state 62
+
+
+state 54
+
+   47 param_list_nonempty: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 63
+
+
+state 55
+
+   21 proc_tail: SEMICOLON .
+
+    $default  reduce using rule 21 (proc_tail)
+
+
+state 56
+
+    5 top_decl: VOID NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @1 proc_tail .
+
+    $default  reduce using rule 5 (top_decl)
+
+
+state 57
+
+   23 proc_tail: @5 . procedure_body
+
+    LEFT_CURLY_BRACKET  shift, and go to state 64
+
+    procedure_body  go to state 65
+
+
+state 58
+
+   48 param_list_nonempty: param_list_nonempty COMMA scalar_type NAME .
+   50                    | param_list_nonempty COMMA scalar_type NAME . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+
+    LEFT_SQUARE_BRACKET  shift, and go to state 66
+
+    $default  reduce using rule 48 (param_list_nonempty)
+
+
+state 59
+
+   49 param_list_nonempty: param_list_nonempty COMMA scalar_type MULT . NAME
+
+    NAME  shift, and go to state 67
+
+
+state 60
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @3 . proc_tail
+
+    SEMICOLON  shift, and go to state 55
+
+    $default  reduce using rule 22 (@5)
+
+    proc_tail  go to state 68
+    @5         go to state 57
+
+
+state 61
+
+   18 typed_name_tail: COMMA @4 global_var_tail SEMICOLON .
+
+    $default  reduce using rule 18 (typed_name_tail)
+
+
+state 62
+
+   20 global_var_tail: global_var_tail COMMA . NAME
+
+    NAME  shift, and go to state 69
+
+
+state 63
+
+   47 param_list_nonempty: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET .
+
+    $default  reduce using rule 47 (param_list_nonempty)
+
+
+state 64
+
+   24 procedure_body: LEFT_CURLY_BRACKET . local_decl_list statement_list RIGHT_CURLY_BRACKET
+
+    $default  reduce using rule 26 (local_decl_list)
+
+    local_decl_list  go to state 70
+
+
+state 65
+
+   23 proc_tail: @5 procedure_body .
+
+    $default  reduce using rule 23 (proc_tail)
+
+
+state 66
+
+   50 param_list_nonempty: param_list_nonempty COMMA scalar_type NAME LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET
+
+    INT_NUM  shift, and go to state 71
+
+
+state 67
+
+   49 param_list_nonempty: param_list_nonempty COMMA scalar_type MULT NAME .
+
+    $default  reduce using rule 49 (param_list_nonempty)
+
+
+state 68
+
+   15 typed_name_tail: LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET @3 proc_tail .
+
+    $default  reduce using rule 15 (typed_name_tail)
+
+
+state 69
+
+   20 global_var_tail: global_var_tail COMMA NAME .
+
+    $default  reduce using rule 20 (global_var_tail)
+
+
+state 70
+
+   24 procedure_body: LEFT_CURLY_BRACKET local_decl_list . statement_list RIGHT_CURLY_BRACKET
+   25 local_decl_list: local_decl_list . local_decl
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    $default  reduce using rule 51 (statement_list)
+
+    local_decl      go to state 72
+    scalar_type     go to state 73
+    statement_list  go to state 74
+
+
+state 71
+
+   50 param_list_nonempty: param_list_nonempty COMMA scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 75
+
+
+state 72
+
+   25 local_decl_list: local_decl_list local_decl .
+
+    $default  reduce using rule 25 (local_decl_list)
+
+
+state 73
+
+   27 local_decl: scalar_type . NAME SEMICOLON
+   29           | scalar_type . NAME COMMA @6 local_var_list SEMICOLON
+   30           | scalar_type . NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+   31           | scalar_type . MULT NAME SEMICOLON
+   33           | scalar_type . MULT NAME COMMA @7 ptr_var_list SEMICOLON
+   34           | scalar_type . NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    NAME  shift, and go to state 76
+    MULT  shift, and go to state 77
+
+
+state 74
+
+   24 procedure_body: LEFT_CURLY_BRACKET local_decl_list statement_list . RIGHT_CURLY_BRACKET
+   52 statement_list: statement_list . statement
+
+    READ                 shift, and go to state 78
+    WRITE                shift, and go to state 79
+    RETURN               shift, and go to state 80
+    WHILE                shift, and go to state 81
+    DO                   shift, and go to state 82
+    FOR                  shift, and go to state 83
+    IF                   shift, and go to state 84
+    TRY                  shift, and go to state 85
+    THROW                shift, and go to state 86
+    TRUE_LIT             shift, and go to state 87
+    FALSE_LIT            shift, and go to state 88
+    INCR                 shift, and go to state 89
+    DECR                 shift, and go to state 90
+    NAME                 shift, and go to state 91
+    INT_NUM              shift, and go to state 92
+    FLOAT_NUM            shift, and go to state 93
+    STR_CONST            shift, and go to state 94
+    MULT                 shift, and go to state 95
+    LEFT_ROUND_BRACKET   shift, and go to state 96
+    RIGHT_CURLY_BRACKET  shift, and go to state 97
+    SEMICOLON            shift, and go to state 98
+
+    statement                  go to state 99
+    call_statement             go to state 100
+    return_statement           go to state 101
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 75
+
+   50 param_list_nonempty: param_list_nonempty COMMA scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET .
+
+    $default  reduce using rule 50 (param_list_nonempty)
+
+
+state 76
+
+   27 local_decl: scalar_type NAME . SEMICOLON
+   29           | scalar_type NAME . COMMA @6 local_var_list SEMICOLON
+   30           | scalar_type NAME . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+   34           | scalar_type NAME . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    LEFT_SQUARE_BRACKET  shift, and go to state 116
+    SEMICOLON            shift, and go to state 117
+    COMMA                shift, and go to state 118
+
+
+state 77
+
+   31 local_decl: scalar_type MULT . NAME SEMICOLON
+   33           | scalar_type MULT . NAME COMMA @7 ptr_var_list SEMICOLON
+
+    NAME  shift, and go to state 119
+
+
+state 78
+
+   98 read_statement: READ . postfix_expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    postfix_expression  go to state 121
+    primary_expression  go to state 111
+
+
+state 79
+
+   97 print_statement: WRITE . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 128
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 80
+
+   85 return_statement: RETURN . SEMICOLON
+   86                 | RETURN . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    SEMICOLON           shift, and go to state 138
+
+    expression                 go to state 139
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 81
+
+   90 while_statement: WHILE . LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement
+
+    LEFT_ROUND_BRACKET  shift, and go to state 140
+
+
+state 82
+
+   91 do_while_statement: DO . body_statement WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON
+
+    READ                shift, and go to state 78
+    WRITE               shift, and go to state 79
+    RETURN              shift, and go to state 80
+    WHILE               shift, and go to state 81
+    DO                  shift, and go to state 82
+    FOR                 shift, and go to state 83
+    IF                  shift, and go to state 84
+    TRY                 shift, and go to state 85
+    THROW               shift, and go to state 86
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 91
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+    SEMICOLON           shift, and go to state 98
+
+    statement                  go to state 142
+    call_statement             go to state 100
+    return_statement           go to state 101
+    body_statement             go to state 143
+    compound_statement         go to state 144
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 83
+
+   92 for_statement: FOR . LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+    LEFT_ROUND_BRACKET  shift, and go to state 145
+
+
+state 84
+
+   93 if_else_statement: IF . LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement ELSE body_statement
+   94 if_statement: IF . LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement
+
+    LEFT_ROUND_BRACKET  shift, and go to state 146
+
+
+state 85
+
+  156 try_catch_statement: TRY . compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+
+    compound_statement  go to state 147
+
+
+state 86
+
+  155 throw_statement: THROW . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 148
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 87
+
+  137 primary_expression: TRUE_LIT .
+
+    $default  reduce using rule 137 (primary_expression)
+
+
+state 88
+
+  138 primary_expression: FALSE_LIT .
+
+    $default  reduce using rule 138 (primary_expression)
+
+
+state 89
+
+  149 incr_decr_statement: INCR . postfix_expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    postfix_expression  go to state 149
+    primary_expression  go to state 111
+
+
+state 90
+
+  150 incr_decr_statement: DECR . postfix_expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    postfix_expression  go to state 150
+    primary_expression  go to state 111
+
+
+state 91
+
+   84 call_statement: NAME . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET SEMICOLON
+  133 primary_expression: NAME .
+
+    LEFT_ROUND_BRACKET  shift, and go to state 151
+
+    LEFT_ROUND_BRACKET  [reduce using rule 133 (primary_expression)]
+    $default            reduce using rule 133 (primary_expression)
+
+
+state 92
+
+  134 primary_expression: INT_NUM .
+
+    $default  reduce using rule 134 (primary_expression)
+
+
+state 93
+
+  135 primary_expression: FLOAT_NUM .
+
+    $default  reduce using rule 135 (primary_expression)
+
+
+state 94
+
+  136 primary_expression: STR_CONST .
+
+    $default  reduce using rule 136 (primary_expression)
+
+
+state 95
+
+   96 assignment_statement: MULT . unary_expression ASSIGN_OP expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 152
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 96
+
+  139 primary_expression: LEFT_ROUND_BRACKET . INTEGER RIGHT_ROUND_BRACKET unary_expression
+  140                   | LEFT_ROUND_BRACKET . FLOAT RIGHT_ROUND_BRACKET unary_expression
+  141                   | LEFT_ROUND_BRACKET . BOOL RIGHT_ROUND_BRACKET unary_expression
+  142                   | LEFT_ROUND_BRACKET . expression RIGHT_ROUND_BRACKET
+
+    INTEGER             shift, and go to state 153
+    FLOAT               shift, and go to state 154
+    BOOL                shift, and go to state 155
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 156
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 97
+
+   24 procedure_body: LEFT_CURLY_BRACKET local_decl_list statement_list RIGHT_CURLY_BRACKET .
+
+    $default  reduce using rule 24 (procedure_body)
+
+
+state 98
+
+   67 statement: SEMICOLON .
+
+    $default  reduce using rule 67 (statement)
+
+
+state 99
+
+   52 statement_list: statement_list statement .
+
+    $default  reduce using rule 52 (statement_list)
+
+
+state 100
+
+   62 statement: call_statement .
+
+    $default  reduce using rule 62 (statement)
+
+
+state 101
+
+   61 statement: return_statement .
+
+    $default  reduce using rule 61 (statement)
+
+
+state 102
+
+   56 statement: while_statement .
+
+    $default  reduce using rule 56 (statement)
+
+
+state 103
+
+   57 statement: do_while_statement .
+
+    $default  reduce using rule 57 (statement)
+
+
+state 104
+
+   58 statement: for_statement .
+
+    $default  reduce using rule 58 (statement)
+
+
+state 105
+
+   59 statement: if_else_statement .
+
+    $default  reduce using rule 59 (statement)
+
+
+state 106
+
+   60 statement: if_statement .
+
+    $default  reduce using rule 60 (statement)
+
+
+state 107
+
+   53 statement: assignment_statement .
+
+    $default  reduce using rule 53 (statement)
+
+
+state 108
+
+   54 statement: print_statement .
+
+    $default  reduce using rule 54 (statement)
+
+
+state 109
+
+   55 statement: read_statement .
+
+    $default  reduce using rule 55 (statement)
+
+
+state 110
+
+   95 assignment_statement: postfix_expression . ASSIGN_OP expression SEMICOLON
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+  147 incr_decr_statement: postfix_expression . INCR SEMICOLON
+  148                    | postfix_expression . DECR SEMICOLON
+  151 compound_assign_statement: postfix_expression . PLUS_ASSIGN expression SEMICOLON
+  152                          | postfix_expression . MINUS_ASSIGN expression SEMICOLON
+  153                          | postfix_expression . MULT_ASSIGN expression SEMICOLON
+  154                          | postfix_expression . DIV_ASSIGN expression SEMICOLON
+
+    INCR                 shift, and go to state 157
+    DECR                 shift, and go to state 158
+    PLUS_ASSIGN          shift, and go to state 159
+    MINUS_ASSIGN         shift, and go to state 160
+    MULT_ASSIGN          shift, and go to state 161
+    DIV_ASSIGN           shift, and go to state 162
+    ASSIGN_OP            shift, and go to state 163
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+
+
+state 111
+
+  127 postfix_expression: primary_expression .
+
+    $default  reduce using rule 127 (postfix_expression)
+
+
+state 112
+
+   63 statement: incr_decr_statement .
+
+    $default  reduce using rule 63 (statement)
+
+
+state 113
+
+   64 statement: compound_assign_statement .
+
+    $default  reduce using rule 64 (statement)
+
+
+state 114
+
+   65 statement: throw_statement .
+
+    $default  reduce using rule 65 (statement)
+
+
+state 115
+
+   66 statement: try_catch_statement .
+
+    $default  reduce using rule 66 (statement)
+
+
+state 116
+
+   30 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+   34           | scalar_type NAME LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    INT_NUM  shift, and go to state 167
+
+
+state 117
+
+   27 local_decl: scalar_type NAME SEMICOLON .
+
+    $default  reduce using rule 27 (local_decl)
+
+
+state 118
+
+   29 local_decl: scalar_type NAME COMMA . @6 local_var_list SEMICOLON
+
+    $default  reduce using rule 28 (@6)
+
+    @6  go to state 168
+
+
+state 119
+
+   31 local_decl: scalar_type MULT NAME . SEMICOLON
+   33           | scalar_type MULT NAME . COMMA @7 ptr_var_list SEMICOLON
+
+    SEMICOLON  shift, and go to state 169
+    COMMA      shift, and go to state 170
+
+
+state 120
+
+  133 primary_expression: NAME .
+
+    $default  reduce using rule 133 (primary_expression)
+
+
+state 121
+
+   98 read_statement: READ postfix_expression . SEMICOLON
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+    SEMICOLON            shift, and go to state 173
+
+
+state 122
+
+  122 unary_expression: INCR . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 174
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 123
+
+  123 unary_expression: DECR . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 175
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 124
+
+  124 unary_expression: MINUS . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 176
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 125
+
+  125 unary_expression: MULT . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 177
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 126
+
+  126 unary_expression: ADDRESSOF . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 178
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 127
+
+  107 logical_not_expression: NOT . logical_not_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    logical_not_expression     go to state 179
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 128
+
+   97 print_statement: WRITE expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 180
+
+
+state 129
+
+   99 expression: ternary_expression .
+
+    $default  reduce using rule 99 (expression)
+
+
+state 130
+
+  100 ternary_expression: logical_or_expression .
+  101                   | logical_or_expression . QUESTION_MARK expression COLON ternary_expression
+  103 logical_or_expression: logical_or_expression . OR logical_and_expression
+
+    OR             shift, and go to state 181
+    QUESTION_MARK  shift, and go to state 182
+
+    $default  reduce using rule 100 (ternary_expression)
+
+
+state 131
+
+  102 logical_or_expression: logical_and_expression .
+  105 logical_and_expression: logical_and_expression . AND logical_not_expression
+
+    AND  shift, and go to state 183
+
+    $default  reduce using rule 102 (logical_or_expression)
+
+
+state 132
+
+  104 logical_and_expression: logical_not_expression .
+
+    $default  reduce using rule 104 (logical_and_expression)
+
+
+state 133
+
+  106 logical_not_expression: relational_expression .
+  109 relational_expression: relational_expression . LESS_THAN additive_expression
+  110                      | relational_expression . LESS_THAN_EQUAL additive_expression
+  111                      | relational_expression . GREATER_THAN additive_expression
+  112                      | relational_expression . GREATER_THAN_EQUAL additive_expression
+  113                      | relational_expression . EQUAL additive_expression
+  114                      | relational_expression . NOT_EQUAL additive_expression
+
+    LESS_THAN           shift, and go to state 184
+    LESS_THAN_EQUAL     shift, and go to state 185
+    GREATER_THAN        shift, and go to state 186
+    GREATER_THAN_EQUAL  shift, and go to state 187
+    EQUAL               shift, and go to state 188
+    NOT_EQUAL           shift, and go to state 189
+
+    $default  reduce using rule 106 (logical_not_expression)
+
+
+state 134
+
+  108 relational_expression: additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 108 (relational_expression)
+
+
+state 135
+
+  115 additive_expression: multiplicative_expression .
+  119 multiplicative_expression: multiplicative_expression . MULT unary_expression
+  120                          | multiplicative_expression . DIV unary_expression
+
+    MULT  shift, and go to state 192
+    DIV   shift, and go to state 193
+
+    $default  reduce using rule 115 (additive_expression)
+
+
+state 136
+
+  118 multiplicative_expression: unary_expression .
+
+    $default  reduce using rule 118 (multiplicative_expression)
+
+
+state 137
+
+  121 unary_expression: postfix_expression .
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+
+    INCR                 [reduce using rule 121 (unary_expression)]
+    DECR                 [reduce using rule 121 (unary_expression)]
+    DOT                  [reduce using rule 121 (unary_expression)]
+    LEFT_ROUND_BRACKET   [reduce using rule 121 (unary_expression)]
+    LEFT_SQUARE_BRACKET  [reduce using rule 121 (unary_expression)]
+    $default             reduce using rule 121 (unary_expression)
+
+
+state 138
+
+   85 return_statement: RETURN SEMICOLON .
+
+    $default  reduce using rule 85 (return_statement)
+
+
+state 139
+
+   86 return_statement: RETURN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 194
+
+
+state 140
+
+   90 while_statement: WHILE LEFT_ROUND_BRACKET . expression RIGHT_ROUND_BRACKET body_statement
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 195
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 141
+
+   89 compound_statement: LEFT_CURLY_BRACKET . statement_list RIGHT_CURLY_BRACKET
+
+    $default  reduce using rule 51 (statement_list)
+
+    statement_list  go to state 196
+
+
+state 142
+
+   88 body_statement: statement .
+
+    $default  reduce using rule 88 (body_statement)
+
+
+state 143
+
+   91 do_while_statement: DO body_statement . WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON
+
+    WHILE  shift, and go to state 197
+
+
+state 144
+
+   87 body_statement: compound_statement .
+
+    $default  reduce using rule 87 (body_statement)
+
+
+state 145
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET . optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    $default  reduce using rule 68 (optional_statement)
+
+    optional_statement         go to state 198
+    assignment_statement       go to state 199
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 200
+    compound_assign_statement  go to state 201
+
+
+state 146
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET . expression RIGHT_ROUND_BRACKET body_statement ELSE body_statement
+   94 if_statement: IF LEFT_ROUND_BRACKET . expression RIGHT_ROUND_BRACKET body_statement
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 202
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 147
+
+  156 try_catch_statement: TRY compound_statement . CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+
+    CATCH  shift, and go to state 203
+
+
+state 148
+
+  155 throw_statement: THROW expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 204
+
+
+state 149
+
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+  149 incr_decr_statement: INCR postfix_expression . SEMICOLON
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+    SEMICOLON            shift, and go to state 205
+
+
+state 150
+
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+  150 incr_decr_statement: DECR postfix_expression . SEMICOLON
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+    SEMICOLON            shift, and go to state 206
+
+
+state 151
+
+   84 call_statement: NAME LEFT_ROUND_BRACKET . arg_list RIGHT_ROUND_BRACKET SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    $default  reduce using rule 143 (arg_list)
+
+    expression                 go to state 207
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+    arg_list                   go to state 208
+    arg_list_nonempty          go to state 209
+
+
+state 152
+
+   96 assignment_statement: MULT unary_expression . ASSIGN_OP expression SEMICOLON
+
+    ASSIGN_OP  shift, and go to state 210
+
+
+state 153
+
+  139 primary_expression: LEFT_ROUND_BRACKET INTEGER . RIGHT_ROUND_BRACKET unary_expression
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 211
+
+
+state 154
+
+  140 primary_expression: LEFT_ROUND_BRACKET FLOAT . RIGHT_ROUND_BRACKET unary_expression
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 212
+
+
+state 155
+
+  141 primary_expression: LEFT_ROUND_BRACKET BOOL . RIGHT_ROUND_BRACKET unary_expression
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 213
+
+
+state 156
+
+  142 primary_expression: LEFT_ROUND_BRACKET expression . RIGHT_ROUND_BRACKET
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 214
+
+
+state 157
+
+  128 postfix_expression: postfix_expression INCR .
+  147 incr_decr_statement: postfix_expression INCR . SEMICOLON
+
+    SEMICOLON  shift, and go to state 215
+
+    $default  reduce using rule 128 (postfix_expression)
+
+
+state 158
+
+  129 postfix_expression: postfix_expression DECR .
+  148 incr_decr_statement: postfix_expression DECR . SEMICOLON
+
+    SEMICOLON  shift, and go to state 216
+
+    $default  reduce using rule 129 (postfix_expression)
+
+
+state 159
+
+  151 compound_assign_statement: postfix_expression PLUS_ASSIGN . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 217
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 160
+
+  152 compound_assign_statement: postfix_expression MINUS_ASSIGN . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 218
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 161
+
+  153 compound_assign_statement: postfix_expression MULT_ASSIGN . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 219
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 162
+
+  154 compound_assign_statement: postfix_expression DIV_ASSIGN . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 220
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 163
+
+   95 assignment_statement: postfix_expression ASSIGN_OP . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 221
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 164
+
+  132 postfix_expression: postfix_expression DOT . NAME
+
+    NAME  shift, and go to state 222
+
+
+state 165
+
+  130 postfix_expression: postfix_expression LEFT_ROUND_BRACKET . arg_list RIGHT_ROUND_BRACKET
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    $default  reduce using rule 143 (arg_list)
+
+    expression                 go to state 207
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+    arg_list                   go to state 223
+    arg_list_nonempty          go to state 209
+
+
+state 166
+
+  131 postfix_expression: postfix_expression LEFT_SQUARE_BRACKET . expression RIGHT_SQUARE_BRACKET
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 224
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 167
+
+   30 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET SEMICOLON
+   34           | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 225
+
+
+state 168
+
+   29 local_decl: scalar_type NAME COMMA @6 . local_var_list SEMICOLON
+
+    NAME  shift, and go to state 226
+
+    local_var_list  go to state 227
+
+
+state 169
+
+   31 local_decl: scalar_type MULT NAME SEMICOLON .
+
+    $default  reduce using rule 31 (local_decl)
+
+
+state 170
+
+   33 local_decl: scalar_type MULT NAME COMMA . @7 ptr_var_list SEMICOLON
+
+    $default  reduce using rule 32 (@7)
+
+    @7  go to state 228
+
+
+state 171
+
+  128 postfix_expression: postfix_expression INCR .
+
+    $default  reduce using rule 128 (postfix_expression)
+
+
+state 172
+
+  129 postfix_expression: postfix_expression DECR .
+
+    $default  reduce using rule 129 (postfix_expression)
+
+
+state 173
+
+   98 read_statement: READ postfix_expression SEMICOLON .
+
+    $default  reduce using rule 98 (read_statement)
+
+
+state 174
+
+  122 unary_expression: INCR unary_expression .
+
+    $default  reduce using rule 122 (unary_expression)
+
+
+state 175
+
+  123 unary_expression: DECR unary_expression .
+
+    $default  reduce using rule 123 (unary_expression)
+
+
+state 176
+
+  124 unary_expression: MINUS unary_expression .
+
+    $default  reduce using rule 124 (unary_expression)
+
+
+state 177
+
+  125 unary_expression: MULT unary_expression .
+
+    $default  reduce using rule 125 (unary_expression)
+
+
+state 178
+
+  126 unary_expression: ADDRESSOF unary_expression .
+
+    $default  reduce using rule 126 (unary_expression)
+
+
+state 179
+
+  107 logical_not_expression: NOT logical_not_expression .
+
+    $default  reduce using rule 107 (logical_not_expression)
+
+
+state 180
+
+   97 print_statement: WRITE expression SEMICOLON .
+
+    $default  reduce using rule 97 (print_statement)
+
+
+state 181
+
+  103 logical_or_expression: logical_or_expression OR . logical_and_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    logical_and_expression     go to state 229
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 182
+
+  101 ternary_expression: logical_or_expression QUESTION_MARK . expression COLON ternary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 230
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 183
+
+  105 logical_and_expression: logical_and_expression AND . logical_not_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    logical_not_expression     go to state 231
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 184
+
+  109 relational_expression: relational_expression LESS_THAN . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 232
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 185
+
+  110 relational_expression: relational_expression LESS_THAN_EQUAL . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 233
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 186
+
+  111 relational_expression: relational_expression GREATER_THAN . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 234
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 187
+
+  112 relational_expression: relational_expression GREATER_THAN_EQUAL . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 235
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 188
+
+  113 relational_expression: relational_expression EQUAL . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 236
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 189
+
+  114 relational_expression: relational_expression NOT_EQUAL . additive_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    additive_expression        go to state 237
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 190
+
+  116 additive_expression: additive_expression PLUS . multiplicative_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    multiplicative_expression  go to state 238
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 191
+
+  117 additive_expression: additive_expression MINUS . multiplicative_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    multiplicative_expression  go to state 239
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 192
+
+  119 multiplicative_expression: multiplicative_expression MULT . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 240
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 193
+
+  120 multiplicative_expression: multiplicative_expression DIV . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 241
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 194
+
+   86 return_statement: RETURN expression SEMICOLON .
+
+    $default  reduce using rule 86 (return_statement)
+
+
+state 195
+
+   90 while_statement: WHILE LEFT_ROUND_BRACKET expression . RIGHT_ROUND_BRACKET body_statement
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 242
+
+
+state 196
+
+   52 statement_list: statement_list . statement
+   89 compound_statement: LEFT_CURLY_BRACKET statement_list . RIGHT_CURLY_BRACKET
+
+    READ                 shift, and go to state 78
+    WRITE                shift, and go to state 79
+    RETURN               shift, and go to state 80
+    WHILE                shift, and go to state 81
+    DO                   shift, and go to state 82
+    FOR                  shift, and go to state 83
+    IF                   shift, and go to state 84
+    TRY                  shift, and go to state 85
+    THROW                shift, and go to state 86
+    TRUE_LIT             shift, and go to state 87
+    FALSE_LIT            shift, and go to state 88
+    INCR                 shift, and go to state 89
+    DECR                 shift, and go to state 90
+    NAME                 shift, and go to state 91
+    INT_NUM              shift, and go to state 92
+    FLOAT_NUM            shift, and go to state 93
+    STR_CONST            shift, and go to state 94
+    MULT                 shift, and go to state 95
+    LEFT_ROUND_BRACKET   shift, and go to state 96
+    RIGHT_CURLY_BRACKET  shift, and go to state 243
+    SEMICOLON            shift, and go to state 98
+
+    statement                  go to state 99
+    call_statement             go to state 100
+    return_statement           go to state 101
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 197
+
+   91 do_while_statement: DO body_statement WHILE . LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON
+
+    LEFT_ROUND_BRACKET  shift, and go to state 244
+
+
+state 198
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement . SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+    SEMICOLON  shift, and go to state 245
+
+
+state 199
+
+   69 optional_statement: assignment_statement .
+
+    $default  reduce using rule 69 (optional_statement)
+
+
+state 200
+
+   70 optional_statement: incr_decr_statement .
+
+    $default  reduce using rule 70 (optional_statement)
+
+
+state 201
+
+   71 optional_statement: compound_assign_statement .
+
+    $default  reduce using rule 71 (optional_statement)
+
+
+state 202
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression . RIGHT_ROUND_BRACKET body_statement ELSE body_statement
+   94 if_statement: IF LEFT_ROUND_BRACKET expression . RIGHT_ROUND_BRACKET body_statement
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 246
+
+
+state 203
+
+  156 try_catch_statement: TRY compound_statement CATCH . LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+
+    LEFT_ROUND_BRACKET  shift, and go to state 247
+
+
+state 204
+
+  155 throw_statement: THROW expression SEMICOLON .
+
+    $default  reduce using rule 155 (throw_statement)
+
+
+state 205
+
+  149 incr_decr_statement: INCR postfix_expression SEMICOLON .
+
+    $default  reduce using rule 149 (incr_decr_statement)
+
+
+state 206
+
+  150 incr_decr_statement: DECR postfix_expression SEMICOLON .
+
+    $default  reduce using rule 150 (incr_decr_statement)
+
+
+state 207
+
+  145 arg_list_nonempty: expression .
+
+    $default  reduce using rule 145 (arg_list_nonempty)
+
+
+state 208
+
+   84 call_statement: NAME LEFT_ROUND_BRACKET arg_list . RIGHT_ROUND_BRACKET SEMICOLON
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 248
+
+
+state 209
+
+  144 arg_list: arg_list_nonempty .
+  146 arg_list_nonempty: arg_list_nonempty . COMMA expression
+
+    COMMA  shift, and go to state 249
+
+    $default  reduce using rule 144 (arg_list)
+
+
+state 210
+
+   96 assignment_statement: MULT unary_expression ASSIGN_OP . expression SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 250
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 211
+
+  139 primary_expression: LEFT_ROUND_BRACKET INTEGER RIGHT_ROUND_BRACKET . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 251
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 212
+
+  140 primary_expression: LEFT_ROUND_BRACKET FLOAT RIGHT_ROUND_BRACKET . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 252
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 213
+
+  141 primary_expression: LEFT_ROUND_BRACKET BOOL RIGHT_ROUND_BRACKET . unary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    unary_expression    go to state 253
+    postfix_expression  go to state 137
+    primary_expression  go to state 111
+
+
+state 214
+
+  142 primary_expression: LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET .
+
+    $default  reduce using rule 142 (primary_expression)
+
+
+state 215
+
+  147 incr_decr_statement: postfix_expression INCR SEMICOLON .
+
+    $default  reduce using rule 147 (incr_decr_statement)
+
+
+state 216
+
+  148 incr_decr_statement: postfix_expression DECR SEMICOLON .
+
+    $default  reduce using rule 148 (incr_decr_statement)
+
+
+state 217
+
+  151 compound_assign_statement: postfix_expression PLUS_ASSIGN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 254
+
+
+state 218
+
+  152 compound_assign_statement: postfix_expression MINUS_ASSIGN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 255
+
+
+state 219
+
+  153 compound_assign_statement: postfix_expression MULT_ASSIGN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 256
+
+
+state 220
+
+  154 compound_assign_statement: postfix_expression DIV_ASSIGN expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 257
+
+
+state 221
+
+   95 assignment_statement: postfix_expression ASSIGN_OP expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 258
+
+
+state 222
+
+  132 postfix_expression: postfix_expression DOT NAME .
+
+    $default  reduce using rule 132 (postfix_expression)
+
+
+state 223
+
+  130 postfix_expression: postfix_expression LEFT_ROUND_BRACKET arg_list . RIGHT_ROUND_BRACKET
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 259
+
+
+state 224
+
+  131 postfix_expression: postfix_expression LEFT_SQUARE_BRACKET expression . RIGHT_SQUARE_BRACKET
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 260
+
+
+state 225
+
+   30 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET . SEMICOLON
+   34           | scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET . LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    LEFT_SQUARE_BRACKET  shift, and go to state 261
+    SEMICOLON            shift, and go to state 262
+
+
+state 226
+
+   39 local_var_list: NAME .
+
+    $default  reduce using rule 39 (local_var_list)
+
+
+state 227
+
+   29 local_decl: scalar_type NAME COMMA @6 local_var_list . SEMICOLON
+   40 local_var_list: local_var_list . COMMA NAME
+
+    SEMICOLON  shift, and go to state 263
+    COMMA      shift, and go to state 264
+
+
+state 228
+
+   33 local_decl: scalar_type MULT NAME COMMA @7 . ptr_var_list SEMICOLON
+
+    MULT  shift, and go to state 265
+
+    ptr_var_list  go to state 266
+
+
+state 229
+
+  103 logical_or_expression: logical_or_expression OR logical_and_expression .
+  105 logical_and_expression: logical_and_expression . AND logical_not_expression
+
+    AND  shift, and go to state 183
+
+    $default  reduce using rule 103 (logical_or_expression)
+
+
+state 230
+
+  101 ternary_expression: logical_or_expression QUESTION_MARK expression . COLON ternary_expression
+
+    COLON  shift, and go to state 267
+
+
+state 231
+
+  105 logical_and_expression: logical_and_expression AND logical_not_expression .
+
+    $default  reduce using rule 105 (logical_and_expression)
+
+
+state 232
+
+  109 relational_expression: relational_expression LESS_THAN additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 109 (relational_expression)
+
+
+state 233
+
+  110 relational_expression: relational_expression LESS_THAN_EQUAL additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 110 (relational_expression)
+
+
+state 234
+
+  111 relational_expression: relational_expression GREATER_THAN additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 111 (relational_expression)
+
+
+state 235
+
+  112 relational_expression: relational_expression GREATER_THAN_EQUAL additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 112 (relational_expression)
+
+
+state 236
+
+  113 relational_expression: relational_expression EQUAL additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 113 (relational_expression)
+
+
+state 237
+
+  114 relational_expression: relational_expression NOT_EQUAL additive_expression .
+  116 additive_expression: additive_expression . PLUS multiplicative_expression
+  117                    | additive_expression . MINUS multiplicative_expression
+
+    PLUS   shift, and go to state 190
+    MINUS  shift, and go to state 191
+
+    $default  reduce using rule 114 (relational_expression)
+
+
+state 238
+
+  116 additive_expression: additive_expression PLUS multiplicative_expression .
+  119 multiplicative_expression: multiplicative_expression . MULT unary_expression
+  120                          | multiplicative_expression . DIV unary_expression
+
+    MULT  shift, and go to state 192
+    DIV   shift, and go to state 193
+
+    $default  reduce using rule 116 (additive_expression)
+
+
+state 239
+
+  117 additive_expression: additive_expression MINUS multiplicative_expression .
+  119 multiplicative_expression: multiplicative_expression . MULT unary_expression
+  120                          | multiplicative_expression . DIV unary_expression
+
+    MULT  shift, and go to state 192
+    DIV   shift, and go to state 193
+
+    $default  reduce using rule 117 (additive_expression)
+
+
+state 240
+
+  119 multiplicative_expression: multiplicative_expression MULT unary_expression .
+
+    $default  reduce using rule 119 (multiplicative_expression)
+
+
+state 241
+
+  120 multiplicative_expression: multiplicative_expression DIV unary_expression .
+
+    $default  reduce using rule 120 (multiplicative_expression)
+
+
+state 242
+
+   90 while_statement: WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET . body_statement
+
+    READ                shift, and go to state 78
+    WRITE               shift, and go to state 79
+    RETURN              shift, and go to state 80
+    WHILE               shift, and go to state 81
+    DO                  shift, and go to state 82
+    FOR                 shift, and go to state 83
+    IF                  shift, and go to state 84
+    TRY                 shift, and go to state 85
+    THROW               shift, and go to state 86
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 91
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+    SEMICOLON           shift, and go to state 98
+
+    statement                  go to state 142
+    call_statement             go to state 100
+    return_statement           go to state 101
+    body_statement             go to state 268
+    compound_statement         go to state 144
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 243
+
+   89 compound_statement: LEFT_CURLY_BRACKET statement_list RIGHT_CURLY_BRACKET .
+
+    $default  reduce using rule 89 (compound_statement)
+
+
+state 244
+
+   91 do_while_statement: DO body_statement WHILE LEFT_ROUND_BRACKET . expression RIGHT_ROUND_BRACKET SEMICOLON
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 269
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 245
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON . optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    $default  reduce using rule 82 (optional_expression)
+
+    optional_expression        go to state 270
+    expression                 go to state 271
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 246
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET . body_statement ELSE body_statement
+   94 if_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET . body_statement
+
+    READ                shift, and go to state 78
+    WRITE               shift, and go to state 79
+    RETURN              shift, and go to state 80
+    WHILE               shift, and go to state 81
+    DO                  shift, and go to state 82
+    FOR                 shift, and go to state 83
+    IF                  shift, and go to state 84
+    TRY                 shift, and go to state 85
+    THROW               shift, and go to state 86
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 91
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+    SEMICOLON           shift, and go to state 98
+
+    statement                  go to state 142
+    call_statement             go to state 100
+    return_statement           go to state 101
+    body_statement             go to state 272
+    compound_statement         go to state 144
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 247
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET . scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+
+    INTEGER  shift, and go to state 2
+    FLOAT    shift, and go to state 3
+    BOOL     shift, and go to state 4
+    STRING   shift, and go to state 5
+
+    scalar_type  go to state 273
+
+
+state 248
+
+   84 call_statement: NAME LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET . SEMICOLON
+
+    SEMICOLON  shift, and go to state 274
+
+
+state 249
+
+  146 arg_list_nonempty: arg_list_nonempty COMMA . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 275
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 250
+
+   96 assignment_statement: MULT unary_expression ASSIGN_OP expression . SEMICOLON
+
+    SEMICOLON  shift, and go to state 276
+
+
+state 251
+
+  139 primary_expression: LEFT_ROUND_BRACKET INTEGER RIGHT_ROUND_BRACKET unary_expression .
+
+    $default  reduce using rule 139 (primary_expression)
+
+
+state 252
+
+  140 primary_expression: LEFT_ROUND_BRACKET FLOAT RIGHT_ROUND_BRACKET unary_expression .
+
+    $default  reduce using rule 140 (primary_expression)
+
+
+state 253
+
+  141 primary_expression: LEFT_ROUND_BRACKET BOOL RIGHT_ROUND_BRACKET unary_expression .
+
+    $default  reduce using rule 141 (primary_expression)
+
+
+state 254
+
+  151 compound_assign_statement: postfix_expression PLUS_ASSIGN expression SEMICOLON .
+
+    $default  reduce using rule 151 (compound_assign_statement)
+
+
+state 255
+
+  152 compound_assign_statement: postfix_expression MINUS_ASSIGN expression SEMICOLON .
+
+    $default  reduce using rule 152 (compound_assign_statement)
+
+
+state 256
+
+  153 compound_assign_statement: postfix_expression MULT_ASSIGN expression SEMICOLON .
+
+    $default  reduce using rule 153 (compound_assign_statement)
+
+
+state 257
+
+  154 compound_assign_statement: postfix_expression DIV_ASSIGN expression SEMICOLON .
+
+    $default  reduce using rule 154 (compound_assign_statement)
+
+
+state 258
+
+   95 assignment_statement: postfix_expression ASSIGN_OP expression SEMICOLON .
+
+    $default  reduce using rule 95 (assignment_statement)
+
+
+state 259
+
+  130 postfix_expression: postfix_expression LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET .
+
+    $default  reduce using rule 130 (postfix_expression)
+
+
+state 260
+
+  131 postfix_expression: postfix_expression LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET .
+
+    $default  reduce using rule 131 (postfix_expression)
+
+
+state 261
+
+   34 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET . INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+
+    INT_NUM  shift, and go to state 277
+
+
+state 262
+
+   30 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON .
+
+    $default  reduce using rule 30 (local_decl)
+
+
+state 263
+
+   29 local_decl: scalar_type NAME COMMA @6 local_var_list SEMICOLON .
+
+    $default  reduce using rule 29 (local_decl)
+
+
+state 264
+
+   40 local_var_list: local_var_list COMMA . NAME
+
+    NAME  shift, and go to state 278
+
+
+state 265
+
+   41 ptr_var_list: MULT . NAME
+
+    NAME  shift, and go to state 279
+
+
+state 266
+
+   33 local_decl: scalar_type MULT NAME COMMA @7 ptr_var_list . SEMICOLON
+   42 ptr_var_list: ptr_var_list . COMMA MULT NAME
+
+    SEMICOLON  shift, and go to state 280
+    COMMA      shift, and go to state 281
+
+
+state 267
+
+  101 ternary_expression: logical_or_expression QUESTION_MARK expression COLON . ternary_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    ternary_expression         go to state 282
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 268
+
+   90 while_statement: WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement .
+
+    $default  reduce using rule 90 (while_statement)
+
+
+state 269
+
+   91 do_while_statement: DO body_statement WHILE LEFT_ROUND_BRACKET expression . RIGHT_ROUND_BRACKET SEMICOLON
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 283
+
+
+state 270
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression . SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+
+    SEMICOLON  shift, and go to state 284
+
+
+state 271
+
+   83 optional_expression: expression .
+
+    $default  reduce using rule 83 (optional_expression)
+
+
+state 272
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement . ELSE body_statement
+   94 if_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement .
+
+    ELSE  shift, and go to state 285
+
+    $default  reduce using rule 94 (if_statement)
+
+
+state 273
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type . NAME RIGHT_ROUND_BRACKET compound_statement
+
+    NAME  shift, and go to state 286
+
+
+state 274
+
+   84 call_statement: NAME LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET SEMICOLON .
+
+    $default  reduce using rule 84 (call_statement)
+
+
+state 275
+
+  146 arg_list_nonempty: arg_list_nonempty COMMA expression .
+
+    $default  reduce using rule 146 (arg_list_nonempty)
+
+
+state 276
+
+   96 assignment_statement: MULT unary_expression ASSIGN_OP expression SEMICOLON .
+
+    $default  reduce using rule 96 (assignment_statement)
+
+
+state 277
+
+   34 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM . RIGHT_SQUARE_BRACKET SEMICOLON
+
+    RIGHT_SQUARE_BRACKET  shift, and go to state 287
+
+
+state 278
+
+   40 local_var_list: local_var_list COMMA NAME .
+
+    $default  reduce using rule 40 (local_var_list)
+
+
+state 279
+
+   41 ptr_var_list: MULT NAME .
+
+    $default  reduce using rule 41 (ptr_var_list)
+
+
+state 280
+
+   33 local_decl: scalar_type MULT NAME COMMA @7 ptr_var_list SEMICOLON .
+
+    $default  reduce using rule 33 (local_decl)
+
+
+state 281
+
+   42 ptr_var_list: ptr_var_list COMMA . MULT NAME
+
+    MULT  shift, and go to state 288
+
+
+state 282
+
+  101 ternary_expression: logical_or_expression QUESTION_MARK expression COLON ternary_expression .
+
+    $default  reduce using rule 101 (ternary_expression)
+
+
+state 283
+
+   91 do_while_statement: DO body_statement WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET . SEMICOLON
+
+    SEMICOLON  shift, and go to state 289
+
+
+state 284
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON . for_update RIGHT_ROUND_BRACKET body_statement
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 290
+    DECR                shift, and go to state 291
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    $default  reduce using rule 72 (for_update)
+
+    for_update          go to state 292
+    postfix_expression  go to state 293
+    primary_expression  go to state 111
+
+
+state 285
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement ELSE . body_statement
+
+    READ                shift, and go to state 78
+    WRITE               shift, and go to state 79
+    RETURN              shift, and go to state 80
+    WHILE               shift, and go to state 81
+    DO                  shift, and go to state 82
+    FOR                 shift, and go to state 83
+    IF                  shift, and go to state 84
+    TRY                 shift, and go to state 85
+    THROW               shift, and go to state 86
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 91
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+    SEMICOLON           shift, and go to state 98
+
+    statement                  go to state 142
+    call_statement             go to state 100
+    return_statement           go to state 101
+    body_statement             go to state 294
+    compound_statement         go to state 144
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 286
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME . RIGHT_ROUND_BRACKET compound_statement
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 295
+
+
+state 287
+
+   34 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET . SEMICOLON
+
+    SEMICOLON  shift, and go to state 296
+
+
+state 288
+
+   42 ptr_var_list: ptr_var_list COMMA MULT . NAME
+
+    NAME  shift, and go to state 297
+
+
+state 289
+
+   91 do_while_statement: DO body_statement WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON .
+
+    $default  reduce using rule 91 (do_while_statement)
+
+
+state 290
+
+   76 for_update: INCR . postfix_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    postfix_expression  go to state 298
+    primary_expression  go to state 111
+
+
+state 291
+
+   77 for_update: DECR . postfix_expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    postfix_expression  go to state 299
+    primary_expression  go to state 111
+
+
+state 292
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update . RIGHT_ROUND_BRACKET body_statement
+
+    RIGHT_ROUND_BRACKET  shift, and go to state 300
+
+
+state 293
+
+   73 for_update: postfix_expression . ASSIGN_OP expression
+   74           | postfix_expression . INCR
+   75           | postfix_expression . DECR
+   78           | postfix_expression . PLUS_ASSIGN expression
+   79           | postfix_expression . MINUS_ASSIGN expression
+   80           | postfix_expression . MULT_ASSIGN expression
+   81           | postfix_expression . DIV_ASSIGN expression
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+
+    INCR                 shift, and go to state 301
+    DECR                 shift, and go to state 302
+    PLUS_ASSIGN          shift, and go to state 303
+    MINUS_ASSIGN         shift, and go to state 304
+    MULT_ASSIGN          shift, and go to state 305
+    DIV_ASSIGN           shift, and go to state 306
+    ASSIGN_OP            shift, and go to state 307
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+
+
+state 294
+
+   93 if_else_statement: IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement ELSE body_statement .
+
+    $default  reduce using rule 93 (if_else_statement)
+
+
+state 295
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET . compound_statement
+
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+
+    compound_statement  go to state 308
+
+
+state 296
+
+   34 local_decl: scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON .
+
+    $default  reduce using rule 34 (local_decl)
+
+
+state 297
+
+   42 ptr_var_list: ptr_var_list COMMA MULT NAME .
+
+    $default  reduce using rule 42 (ptr_var_list)
+
+
+state 298
+
+   76 for_update: INCR postfix_expression .
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+
+    $default  reduce using rule 76 (for_update)
+
+
+state 299
+
+   77 for_update: DECR postfix_expression .
+  128 postfix_expression: postfix_expression . INCR
+  129                   | postfix_expression . DECR
+  130                   | postfix_expression . LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
+  131                   | postfix_expression . LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET
+  132                   | postfix_expression . DOT NAME
+
+    INCR                 shift, and go to state 171
+    DECR                 shift, and go to state 172
+    DOT                  shift, and go to state 164
+    LEFT_ROUND_BRACKET   shift, and go to state 165
+    LEFT_SQUARE_BRACKET  shift, and go to state 166
+
+    $default  reduce using rule 77 (for_update)
+
+
+state 300
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET . body_statement
+
+    READ                shift, and go to state 78
+    WRITE               shift, and go to state 79
+    RETURN              shift, and go to state 80
+    WHILE               shift, and go to state 81
+    DO                  shift, and go to state 82
+    FOR                 shift, and go to state 83
+    IF                  shift, and go to state 84
+    TRY                 shift, and go to state 85
+    THROW               shift, and go to state 86
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 89
+    DECR                shift, and go to state 90
+    NAME                shift, and go to state 91
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MULT                shift, and go to state 95
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+    LEFT_CURLY_BRACKET  shift, and go to state 141
+    SEMICOLON           shift, and go to state 98
+
+    statement                  go to state 142
+    call_statement             go to state 100
+    return_statement           go to state 101
+    body_statement             go to state 309
+    compound_statement         go to state 144
+    while_statement            go to state 102
+    do_while_statement         go to state 103
+    for_statement              go to state 104
+    if_else_statement          go to state 105
+    if_statement               go to state 106
+    assignment_statement       go to state 107
+    print_statement            go to state 108
+    read_statement             go to state 109
+    postfix_expression         go to state 110
+    primary_expression         go to state 111
+    incr_decr_statement        go to state 112
+    compound_assign_statement  go to state 113
+    throw_statement            go to state 114
+    try_catch_statement        go to state 115
+
+
+state 301
+
+   74 for_update: postfix_expression INCR .
+  128 postfix_expression: postfix_expression INCR .
+
+    RIGHT_ROUND_BRACKET  reduce using rule 74 (for_update)
+    $default             reduce using rule 128 (postfix_expression)
+
+
+state 302
+
+   75 for_update: postfix_expression DECR .
+  129 postfix_expression: postfix_expression DECR .
+
+    RIGHT_ROUND_BRACKET  reduce using rule 75 (for_update)
+    $default             reduce using rule 129 (postfix_expression)
+
+
+state 303
+
+   78 for_update: postfix_expression PLUS_ASSIGN . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 310
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 304
+
+   79 for_update: postfix_expression MINUS_ASSIGN . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 311
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 305
+
+   80 for_update: postfix_expression MULT_ASSIGN . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 312
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 306
+
+   81 for_update: postfix_expression DIV_ASSIGN . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 313
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 307
+
+   73 for_update: postfix_expression ASSIGN_OP . expression
+
+    TRUE_LIT            shift, and go to state 87
+    FALSE_LIT           shift, and go to state 88
+    INCR                shift, and go to state 122
+    DECR                shift, and go to state 123
+    NAME                shift, and go to state 120
+    INT_NUM             shift, and go to state 92
+    FLOAT_NUM           shift, and go to state 93
+    STR_CONST           shift, and go to state 94
+    MINUS               shift, and go to state 124
+    MULT                shift, and go to state 125
+    ADDRESSOF           shift, and go to state 126
+    NOT                 shift, and go to state 127
+    LEFT_ROUND_BRACKET  shift, and go to state 96
+
+    expression                 go to state 314
+    ternary_expression         go to state 129
+    logical_or_expression      go to state 130
+    logical_and_expression     go to state 131
+    logical_not_expression     go to state 132
+    relational_expression      go to state 133
+    additive_expression        go to state 134
+    multiplicative_expression  go to state 135
+    unary_expression           go to state 136
+    postfix_expression         go to state 137
+    primary_expression         go to state 111
+
+
+state 308
+
+  156 try_catch_statement: TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement .
+
+    $default  reduce using rule 156 (try_catch_statement)
+
+
+state 309
+
+   92 for_statement: FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement .
+
+    $default  reduce using rule 92 (for_statement)
+
+
+state 310
+
+   78 for_update: postfix_expression PLUS_ASSIGN expression .
+
+    $default  reduce using rule 78 (for_update)
+
+
+state 311
+
+   79 for_update: postfix_expression MINUS_ASSIGN expression .
+
+    $default  reduce using rule 79 (for_update)
+
+
+state 312
+
+   80 for_update: postfix_expression MULT_ASSIGN expression .
+
+    $default  reduce using rule 80 (for_update)
+
+
+state 313
+
+   81 for_update: postfix_expression DIV_ASSIGN expression .
+
+    $default  reduce using rule 81 (for_update)
+
+
+state 314
+
+   73 for_update: postfix_expression ASSIGN_OP expression .
+
+    $default  reduce using rule 73 (for_update)
