@@ -106,7 +106,7 @@ public:
     }
 
     Type *getFieldType(const std::string &struct_name, const std::string &field) {
-        auto *it = struct_defs.find(struct_name);
+        auto it = struct_defs.find(struct_name);
         if (it == struct_defs.end()) return nullptr;
 
         for (auto &f: it->second) {
@@ -117,7 +117,7 @@ public:
     }
 
     int getFieldOffset(const std::string &struct_name, const std::string &field) {
-        auto *it = struct_defs.find(struct_name);
+        auto it = struct_defs.find(struct_name);
         if (it == struct_defs.end()) return -1;
 
         for (auto &f: it->second) {

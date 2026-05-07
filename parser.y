@@ -120,6 +120,10 @@
 %token VOID INTEGER FLOAT BOOL STRING STRUCT
 %token READ WRITE RETURN
 %token WHILE DO FOR IF ELSE
+%token TRY CATCH THROW
+%token TRUE_LIT FALSE_LIT
+%token INCR DECR
+%token PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %token <string_value> NAME
 %token <integer_value> INT_NUM
 %token <float_value> FLOAT_NUM
@@ -141,16 +145,20 @@
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
 %left LESS_THAN LESS_THAN_EQUAL GREATER_THAN GREATER_THAN_EQUAL EQUAL NOT_EQUAL
-%right ASSIGN_OP
+%right ASSIGN_OP PLUS_ASSIGN MINUS_ASSIGN MULT_ASSIGN DIV_ASSIGN
 %left PLUS MINUS /* here*/
 %left MULT DIV
 %right UMINUS DEREF
+%left INCR DECR
 
 %type <stmtlist> statement_list procedure_body compound_statement body_statement
 %type <stmt> statement assignment_statement print_statement read_statement optional_statement
 %type <stmt> while_statement do_while_statement for_statement
 %type <stmt> if_statement if_else_statement
 %type <stmt> return_statement call_statement
+%type <stmt> incr_decr_statement compound_assign_statement
+%type <stmt> throw_statement try_catch_statement
+%type <stmt> for_update
 %type <expr> expression ternary_expression optional_expression assignment_expression
 %type <expr> logical_or_expression logical_and_expression logical_not_expression
 %type <expr> relational_expression additive_expression
@@ -492,11 +500,38 @@ statement:
     | if_statement { $$ = $1; }
     | return_statement { $$ = $1; }
     | call_statement { $$ = $1; }
+    | incr_decr_statement { $$ = $1; }
+    | compound_assign_statement { $$ = $1; }
+    | throw_statement { $$ = $1; }
+    | try_catch_statement { $$ = $1; }
 ;
 
 optional_statement:
     /* empty */ { $$ = nullptr; }
     | assignment_statement { $$ = $1; }
+    | incr_decr_statement { $$ = $1; }
+    | compound_assign_statement { $$ = $1; }
+;
+
+/* Like optional_statement but without the trailing SEMICOLON — used in for(;;) slots */
+for_update:
+    /* empty */ { $$ = nullptr; }
+    | postfix_expression ASSIGN_OP expression
+    {
+        if (!isAssignable($1->dtype, $3->dtype)) {
+            fprintf(stderr, "Invalid assignment at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstAssignExpr($1, $3);
+    }
+    | postfix_expression INCR { $$ = new AstIncrDecr($1, OP_INCR, FIX_POST); }
+    | postfix_expression DECR { $$ = new AstIncrDecr($1, OP_DECR, FIX_POST); }
+    | INCR postfix_expression { $$ = new AstIncrDecr($2, OP_INCR, FIX_PRE); }
+    | DECR postfix_expression { $$ = new AstIncrDecr($2, OP_DECR, FIX_PRE); }
+    | postfix_expression PLUS_ASSIGN expression  { $$ = new AstCompoundAssign($1, $3, COP_ADD); }
+    | postfix_expression MINUS_ASSIGN expression { $$ = new AstCompoundAssign($1, $3, COP_SUB); }
+    | postfix_expression MULT_ASSIGN expression  { $$ = new AstCompoundAssign($1, $3, COP_MUL); }
+    | postfix_expression DIV_ASSIGN expression   { $$ = new AstCompoundAssign($1, $3, COP_DIV); }
 ;
 
 optional_expression:
@@ -505,17 +540,21 @@ optional_expression:
 ;
 
 call_statement:
-    NAME LEFT_ROUND_BRACKET RIGHT_ROUND_BRACKET SEMICOLON
+    NAME LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET SEMICOLON
     {
-        auto it = scope.proc_decls.find(std::string($1));
+        std::string fname = std::string($1); free($1);
+        auto it = scope.proc_decls.find(fname);
 
         if (it == scope.proc_decls.end() || !it->second.declared) {
-            fprintf(stderr, "Error: undeclared function '%s' at line %d\n", $1, line_number);
+            fprintf(stderr, "Error: undeclared function '%s' at line %d\n", fname.c_str(), line_number);
             exit(1);
         }
 
-        AstCallStmt *cs = new AstCallStmt(std::string($1));
-        free($1);
+        check_call_args(fname.c_str(), it->second.params, *$3);
+
+        AstCallStmt *cs = new AstCallStmt(fname);
+        cs->args = *$3;
+        delete $3;
 
         $$ = cs;
     }
@@ -592,7 +631,7 @@ do_while_statement:
 ;
 
 for_statement:
-    FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON optional_statement RIGHT_ROUND_BRACKET body_statement
+    FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
     {
         if ($5 && $5->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of for must be boolean at line %d\n", line_number);
@@ -654,17 +693,14 @@ print_statement:
 ;
 
 read_statement:
-    READ NAME SEMICOLON
+    READ postfix_expression SEMICOLON
     {
-        SymEntry *e = checked_lookup($2);
-        if (!isArithType(e->dtype)) {
+        if (!isArithType($2->dtype) && $2->dtype->base != TYPE_STRING) {
             fprintf(stderr, "Error: read is not supported for type '%s' at line %d\n",
-                    type_name(e->dtype).c_str(), line_number);
+                    type_name($2->dtype).c_str(), line_number);
             exit(1);
         }
-
-        $$ = new AstRead(std::string($2), e->dtype);
-        free($2);
+        $$ = new AstRead($2);
     }
 ;
 
@@ -847,6 +883,24 @@ multiplicative_expression:
 unary_expression:
     postfix_expression { $$ = $1; }
 
+    | INCR unary_expression
+    {
+        if (!isArithType($2->dtype)) {
+            fprintf(stderr, "Error: ++ requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = $2;
+    }
+
+    | DECR unary_expression
+    {
+        if (!isArithType($2->dtype)) {
+            fprintf(stderr, "Error: -- requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = $2;
+    }
+
     | MINUS unary_expression %prec UMINUS
     {
         if (!isArithType($2->dtype)) {
@@ -878,6 +932,25 @@ unary_expression:
 
 postfix_expression:
     primary_expression { $$ = $1; }
+
+    | postfix_expression INCR
+    {
+        if (!isArithType($1->dtype)) {
+            fprintf(stderr, "Error: ++ requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        /* As expression, return the value with the same type (post-increment) */
+        $$ = $1; /* placeholder — value used before increment */
+    }
+
+    | postfix_expression DECR
+    {
+        if (!isArithType($1->dtype)) {
+            fprintf(stderr, "Error: -- requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = $1;
+    }
 
     | postfix_expression LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
     {
@@ -983,6 +1056,47 @@ primary_expression:
         free($1);
     }
 
+    | TRUE_LIT
+    {
+        $$ = new AstCondition(COND_EQ,
+                              new AstIntNum(1),
+                              new AstIntNum(1));
+    }
+
+    | FALSE_LIT
+    {
+        $$ = new AstCondition(COND_NE,
+                              new AstIntNum(1),
+                              new AstIntNum(1));
+    }
+
+    | LEFT_ROUND_BRACKET INTEGER RIGHT_ROUND_BRACKET unary_expression
+    {
+        if (!isArithType($4->dtype)) {
+            fprintf(stderr, "Error: cannot cast non-arithmetic type to int at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCast($4, new Type(TYPE_INT));
+    }
+
+    | LEFT_ROUND_BRACKET FLOAT RIGHT_ROUND_BRACKET unary_expression
+    {
+        if (!isArithType($4->dtype)) {
+            fprintf(stderr, "Error: cannot cast non-arithmetic type to float at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCast($4, new Type(TYPE_FLOAT));
+    }
+
+    | LEFT_ROUND_BRACKET BOOL RIGHT_ROUND_BRACKET unary_expression
+    {
+        if (!isArithType($4->dtype) && $4->dtype->base != TYPE_BOOL) {
+            fprintf(stderr, "Error: cannot cast to bool at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCast($4, new Type(TYPE_BOOL));
+    }
+
     | LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET
     {
         $$ = $2;
@@ -1005,6 +1119,91 @@ arg_list_nonempty:
     {
         $1->push_back($3);
         $$ = $1;
+    }
+;
+
+incr_decr_statement:
+    postfix_expression INCR SEMICOLON
+    {
+        if (!isArithType($1->dtype)) {
+            fprintf(stderr, "Error: ++ requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstIncrDecr($1, OP_INCR, FIX_POST);
+    }
+    | postfix_expression DECR SEMICOLON
+    {
+        if (!isArithType($1->dtype)) {
+            fprintf(stderr, "Error: -- requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstIncrDecr($1, OP_DECR, FIX_POST);
+    }
+    | INCR postfix_expression SEMICOLON
+    {
+        if (!isArithType($2->dtype)) {
+            fprintf(stderr, "Error: ++ requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstIncrDecr($2, OP_INCR, FIX_PRE);
+    }
+    | DECR postfix_expression SEMICOLON
+    {
+        if (!isArithType($2->dtype)) {
+            fprintf(stderr, "Error: -- requires arithmetic type at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstIncrDecr($2, OP_DECR, FIX_PRE);
+    }
+;
+
+compound_assign_statement:
+    postfix_expression PLUS_ASSIGN expression SEMICOLON
+    {
+        if (!isArithType($1->dtype) || !isArithType($3->dtype)) {
+            fprintf(stderr, "Error: += requires arithmetic types at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCompoundAssign($1, $3, COP_ADD);
+    }
+    | postfix_expression MINUS_ASSIGN expression SEMICOLON
+    {
+        if (!isArithType($1->dtype) || !isArithType($3->dtype)) {
+            fprintf(stderr, "Error: -= requires arithmetic types at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCompoundAssign($1, $3, COP_SUB);
+    }
+    | postfix_expression MULT_ASSIGN expression SEMICOLON
+    {
+        if (!isArithType($1->dtype) || !isArithType($3->dtype)) {
+            fprintf(stderr, "Error: *= requires arithmetic types at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCompoundAssign($1, $3, COP_MUL);
+    }
+    | postfix_expression DIV_ASSIGN expression SEMICOLON
+    {
+        if (!isArithType($1->dtype) || !isArithType($3->dtype)) {
+            fprintf(stderr, "Error: /= requires arithmetic types at line %d\n", line_number);
+            exit(1);
+        }
+        $$ = new AstCompoundAssign($1, $3, COP_DIV);
+    }
+;
+
+throw_statement:
+    THROW expression SEMICOLON
+    {
+        $$ = new AstThrow($2);
+    }
+;
+
+try_catch_statement:
+    TRY compound_statement CATCH LEFT_ROUND_BRACKET scalar_type NAME RIGHT_ROUND_BRACKET compound_statement
+    {
+        std::string cvar = std::string($6); free($6);
+        $$ = new AstTryCatch($2, cvar, $5, $8);
     }
 ;
 

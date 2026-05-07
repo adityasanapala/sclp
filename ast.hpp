@@ -250,6 +250,23 @@ static void print_operand(const char *label,
     }
 }
 
+/* Type cast: (int)expr  (float)expr  (bool)expr */
+class AstCast : public AstExpression {
+public:
+    AstExpression *expr;
+
+    AstCast(AstExpression *e, Type *dt) : AstExpression(dt), expr(e) {}
+    ~AstCast() { delete expr; }
+
+    bool is_simple() const override { return false; }
+
+    void print(int indent, FILE *out) const override {
+        fprintf(out, "Cast: <%s>\n", type_name(dtype).c_str());
+        AstNode::pad(indent + 1, out);
+        print_operand("Operand", expr, indent + 1, out);
+    }
+};
+
 enum ArithOp {
     OP_PLUS,
     OP_MINUS,
@@ -259,21 +276,20 @@ enum ArithOp {
 
 static inline const char *arith_op_name(ArithOp op) {
     switch (op) {
-        case OP_PLUS:
-            return "Plus";
-
-        case OP_MINUS:
-            return "Minus";
-
-        case OP_MULT:
-            return "Mult";
-
-        case OP_DIV:
-            return "Div";
+        case OP_PLUS:  return "Plus";
+        case OP_MINUS: return "Minus";
+        case OP_MULT:  return "Mult";
+        case OP_DIV:   return "Div";
     }
-
     return "?";
 }
+
+/* ++ / -- enums (classes defined later, after AstStatement) */
+enum IncrDecrOp { OP_INCR, OP_DECR };
+enum IncrDecrFix { FIX_PRE, FIX_POST };
+
+/* Compound assignment enum */
+enum CompoundOp { COP_ADD, COP_SUB, COP_MUL, COP_DIV };
 
 class AstArith : public AstExpression {
 public:
@@ -591,14 +607,16 @@ public:
 
 class AstRead : public AstStatement {
 public:
-    std::string var_name;
-    Type *var_type;
+    AstExpression *lval;   /* any lvalue: name, a[i], s.f, *p */
 
-    AstRead(const std::string &n, Type *dt) : var_name(n), var_type(dt) {}
+    AstRead(AstExpression *lv) : lval(lv) {}
+    ~AstRead() { delete lval; }
 
     void print(int indent, FILE *out) const override {
         pad(indent, out);
-        fprintf(out, "Read: Name : %s <%s>\n", var_name.c_str(), type_name(var_type).c_str());
+        fprintf(out, "Read: ");
+        lval->print(indent, out);
+        fprintf(out, "\n");
     }
 };
 
@@ -845,6 +863,99 @@ public:
         fprintf(out, "\n");
 
         print_block_body("Else", else_body, indent + 1, indent + 2, out);
+        fprintf(out, "\n");
+    }
+};
+
+/* ++ / -- statement */
+class AstIncrDecr : public AstStatement {
+public:
+    AstExpression *operand;
+    IncrDecrOp    op;
+    IncrDecrFix   fix;
+
+    AstIncrDecr(AstExpression *e, IncrDecrOp o, IncrDecrFix f)
+        : operand(e), op(o), fix(f) {}
+
+    ~AstIncrDecr() { delete operand; }
+
+    void print(int indent, FILE *out) const override {
+        pad(indent, out);
+        const char *opstr = (op == OP_INCR) ? "++" : "--";
+        if (fix == FIX_PRE)
+            fprintf(out, "Pre%s:\n", opstr);
+        else
+            fprintf(out, "Post%s:\n", opstr);
+        pad(indent + 1, out);
+        fprintf(out, "Operand (");
+        operand->print(indent + 1, out);
+        fprintf(out, ")\n");
+    }
+};
+
+/* Compound assignment: +=  -=  *=  /= */
+class AstCompoundAssign : public AstStatement {
+public:
+    AstExpression *lhs;
+    AstExpression *rhs;
+    CompoundOp     op;
+
+    AstCompoundAssign(AstExpression *l, AstExpression *r, CompoundOp o)
+        : lhs(l), rhs(r), op(o) {}
+
+    ~AstCompoundAssign() { delete lhs; delete rhs; }
+
+    void print(int indent, FILE *out) const override {
+        pad(indent, out);
+        const char *opstr = (op==COP_ADD)?"+=":
+                            (op==COP_SUB)?"-=":
+                            (op==COP_MUL)?"*=":"/=";
+        fprintf(out, "CompoundAsgn %s:\n", opstr);
+        pad(indent + 1, out);
+        fprintf(out, "LHS ("); lhs->print(indent+1, out); fprintf(out, ")\n");
+        pad(indent + 1, out);
+        fprintf(out, "RHS ("); rhs->print(indent+1, out); fprintf(out, ")\n");
+    }
+};
+
+/* throw expr; */
+class AstThrow : public AstStatement {
+public:
+    AstExpression *expr;
+
+    AstThrow(AstExpression *e) : expr(e) {}
+    ~AstThrow() { delete expr; }
+
+    void print(int indent, FILE *out) const override {
+        pad(indent, out);
+        fprintf(out, "Throw: ");
+        expr->print(indent, out);
+        fprintf(out, "\n");
+    }
+};
+
+/* try { ... } catch (type name) { ... } */
+class AstTryCatch : public AstStatement {
+public:
+    AstNode       *try_body;
+    std::string    catch_var;
+    Type          *catch_type;
+    AstNode       *catch_body;
+
+    AstTryCatch(AstNode *tb, const std::string &cv, Type *ct, AstNode *cb)
+        : try_body(tb), catch_var(cv), catch_type(ct), catch_body(cb) {}
+
+    ~AstTryCatch() { delete try_body; delete catch_body; }
+
+    void print(int indent, FILE *out) const override {
+        pad(indent, out);
+        fprintf(out, "Try:\n");
+        print_block_body("Body", try_body, indent + 1, indent + 2, out);
+        fprintf(out, "\n");
+        pad(indent, out);
+        fprintf(out, "Catch (%s %s):\n",
+                type_name(catch_type).c_str(), catch_var.c_str());
+        print_block_body("Body", catch_body, indent + 1, indent + 2, out);
         fprintf(out, "\n");
     }
 };

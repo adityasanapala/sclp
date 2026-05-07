@@ -40,6 +40,11 @@ FLOAT_LIT   {DIGIT}+\.{DIGIT}+
 "if"        { print_token("IF", yytext); return IF; }
 "else"      { print_token("ELSE", yytext); return ELSE; }
 "return"    { print_token("RETURN", yytext); return RETURN; }
+"true"      { print_token("TRUE_LIT", yytext); return TRUE_LIT; }
+"false"     { print_token("FALSE_LIT", yytext); return FALSE_LIT; }
+"try"       { print_token("TRY", yytext); return TRY; }
+"catch"     { print_token("CATCH", yytext); return CATCH; }
+"throw"     { print_token("THROW", yytext); return THROW; }
 
 {FLOAT_LIT}     {
     yylval.float_value = atof(yytext);
@@ -74,6 +79,12 @@ FLOAT_LIT   {DIGIT}+\.{DIGIT}+
 }
 
 "=" { print_token("ASSIGN_OP", yytext); return ASSIGN_OP; }
+"+=" { print_token("PLUS_ASSIGN", yytext); return PLUS_ASSIGN; }
+"-=" { print_token("MINUS_ASSIGN", yytext); return MINUS_ASSIGN; }
+"*=" { print_token("MULT_ASSIGN", yytext); return MULT_ASSIGN; }
+"/=" { print_token("DIV_ASSIGN", yytext); return DIV_ASSIGN; }
+"++" { print_token("INCR", yytext); return INCR; }
+"--" { print_token("DECR", yytext); return DECR; }
 "+" { print_token("PLUS", yytext); return PLUS; }
 "-" { print_token("MINUS", yytext); return MINUS; }
 "*" { print_token("MULT", yytext); return MULT; }
