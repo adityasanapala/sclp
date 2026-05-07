@@ -164,7 +164,7 @@
 %type <expr> relational_expression additive_expression
 %type <expr> multiplicative_expression unary_expression
 %type <expr> primary_expression postfix_expression
-%type <type> scalar_type array_type
+%type <type> scalar_type
 %type <paramlist> param_list param_list_nonempty
 %type <arglist> arg_list arg_list_nonempty
 %type <field_list> field_list
@@ -198,27 +198,34 @@ top_decl:
     }
     typed_name_tail
     |
-    array_type NAME SEMICOLON
+    scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
     {
+        if ($4 <= 0) {
+            fprintf(stderr, "Error: array size must be positive at line %d\n", line_number);
+            exit(1);
+        }
+        Type *t = new Type(TYPE_ARRAY);
+        t->subtype = $1;
+        t->array_size = $4;
         std::string aname = std::string($2); free($2);
-        if (!scope.declare(aname, $1)) {
+        if (!scope.declare(aname, t)) {
             fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
             exit(1);
         }
-        record_global(aname, $1);
+        record_global(aname, t);
     }
     |
-    array_type NAME COMMA
+    scalar_type MULT NAME SEMICOLON
     {
-        std::string aname = std::string($2); free($2);
-        if (!scope.declare(aname, $1)) {
-            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $1;
+        std::string pname = std::string($3); free($3);
+        if (!scope.declare(pname, ptr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", pname.c_str(), line_number);
             exit(1);
         }
-        record_global(aname, $1);
-        cur_decl_type = $1;
+        record_global(pname, ptr);
     }
-    global_var_tail SEMICOLON
     |
     STRUCT NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON
     {
@@ -368,29 +375,85 @@ local_decl_list:
 ;
 
 local_decl:
-    scalar_type { cur_decl_type = $1; } local_var_list SEMICOLON
-    |
-    array_type NAME SEMICOLON
+    scalar_type NAME SEMICOLON
     {
-        Type *arr = $1;
-        std::string aname = std::string($2); free($2);
-        if (!scope.declare(aname, arr)) {
-            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+        std::string vname = std::string($2); free($2);
+        if (!scope.declare(vname, $1)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", vname.c_str(), line_number);
             exit(1);
         }
     }
     |
-    array_type NAME COMMA
+    scalar_type NAME COMMA
     {
-        Type *arr = $1;
-        std::string aname = std::string($2); free($2);
-        if (!scope.declare(aname, arr)) {
-            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+        cur_decl_type = $1;
+        std::string vname = std::string($2); free($2);
+        if (!scope.declare(vname, cur_decl_type)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", vname.c_str(), line_number);
             exit(1);
         }
-        cur_decl_type = arr;
     }
     local_var_list SEMICOLON
+    |
+    scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+    {
+        if ($4 <= 0) {
+            fprintf(stderr, "Error: array size must be positive at line %d\n", line_number);
+            exit(1);
+        }
+        Type *arr = new Type(TYPE_ARRAY);
+        arr->subtype = $1;
+        arr->array_size = $4;
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, arr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+    }
+    |
+    scalar_type MULT NAME SEMICOLON
+    {
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $1;
+        std::string pname = std::string($3); free($3);
+        if (!scope.declare(pname, ptr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", pname.c_str(), line_number);
+            exit(1);
+        }
+    }
+    |
+    scalar_type MULT NAME COMMA
+    {
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $1;
+        cur_decl_type = ptr;
+        std::string pname = std::string($3); free($3);
+        if (!scope.declare(pname, ptr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", pname.c_str(), line_number);
+            exit(1);
+        }
+    }
+    ptr_var_list SEMICOLON
+    |
+    scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET SEMICOLON
+    {
+        if ($4 <= 0 || $7 <= 0) {
+            fprintf(stderr, "Error: array size must be positive at line %d\n", line_number);
+            exit(1);
+        }
+        /* Build inner array type for the columns, then outer array for the rows */
+        Type *inner = new Type(TYPE_ARRAY);
+        inner->subtype = $1;
+        inner->array_size = $7;
+        Type *outer = new Type(TYPE_ARRAY);
+        outer->subtype = inner;
+        outer->array_size = $4;
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, outer)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+    }
 ;
 
 /* Non-void scalar types */
@@ -402,20 +465,9 @@ scalar_type:
     | STRING { $$ = new Type(TYPE_STRING); }
 ;
 
-/* Array type: e.g. int[5] */
-array_type:
-    scalar_type LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
-    {
-        if ($3 <= 0) {
-            fprintf(stderr, "Error: array size must be positive at line %d\n", line_number);
-            exit(1);
-        }
-        Type *t = new Type(TYPE_ARRAY);
-        t->subtype = $1;
-        t->array_size = $3;
-        $$ = t;
-    }
-;
+/* Array declarations use C-style: scalar_type name[N]
+   The size bracket appears after the name, not after the type.
+   Handled inline in top_decl, local_decl, and param_list_nonempty. */
 
 local_var_list:
     NAME
@@ -439,6 +491,26 @@ local_var_list:
     }
 ;
 
+ptr_var_list:
+    MULT NAME
+    {
+        if (!scope.declare(std::string($2), cur_decl_type)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", $2, line_number);
+            exit(1);
+        }
+        free($2);
+    }
+    |
+    ptr_var_list COMMA MULT NAME
+    {
+        if (!scope.declare(std::string($4), cur_decl_type)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", $4, line_number);
+            exit(1);
+        }
+        free($4);
+    }
+;
+
 param_list:
     /* empty */ { $$ = new std::list<FormalParam>(); }
     | param_list_nonempty { $$ = $1; }
@@ -452,11 +524,20 @@ param_list_nonempty:
         free($2);
     }
     |
-    array_type NAME
+    scalar_type MULT NAME
+    {
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $1;
+        $$ = new std::list<FormalParam>();
+        $$->push_back({std::string($3), ptr});
+        free($3);
+    }
+    |
+    scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
     {
         /* Arrays passed as pointers to their element type */
         Type *ptr = new Type(TYPE_POINTER);
-        ptr->subtype = $1->subtype;
+        ptr->subtype = $1;
         $$ = new std::list<FormalParam>();
         $$->push_back({std::string($2), ptr});
         free($2);
@@ -469,11 +550,20 @@ param_list_nonempty:
         $$ = $1;
     }
     |
-    param_list_nonempty COMMA array_type NAME
+    param_list_nonempty COMMA scalar_type MULT NAME
+    {
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $3;
+        $1->push_back({std::string($5), ptr});
+        free($5);
+        $$ = $1;
+    }
+    |
+    param_list_nonempty COMMA scalar_type NAME LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
     {
         /* Arrays passed as pointers to their element type */
         Type *ptr = new Type(TYPE_POINTER);
-        ptr->subtype = $3->subtype;
+        ptr->subtype = $3;
         $1->push_back({std::string($4), ptr});
         free($4);
         $$ = $1;
@@ -486,7 +576,7 @@ statement_list:
     /* empty */
     { $$ = new AstStatementList(); }
     | statement_list statement
-    { $1->append($2); $$ = $1; }
+    { if ($2) $1->append($2); $$ = $1; }
 ;
 
 statement:
@@ -504,6 +594,7 @@ statement:
     | compound_assign_statement { $$ = $1; }
     | throw_statement { $$ = $1; }
     | try_catch_statement { $$ = $1; }
+    | SEMICOLON { $$ = nullptr; }
 ;
 
 optional_statement:
@@ -673,6 +764,21 @@ assignment_statement:
         }
 
         $$ = new AstAssignExpr($1, $3);
+    }
+    |
+    MULT unary_expression ASSIGN_OP expression SEMICOLON
+    {
+        if ($2->dtype->base != TYPE_POINTER) {
+            fprintf(stderr, "Dereferencing non-pointer at line %d\n", line_number);
+            exit(1);
+        }
+        Type *t = $2->dtype->subtype;
+        if (!isAssignable(t, $4->dtype)) {
+            fprintf(stderr, "Invalid assignment at line %d\n", line_number);
+            exit(1);
+        }
+        AstDeref *lhs = new AstDeref($2, t);
+        $$ = new AstAssignExpr(lhs, $4);
     }
 ;
 
@@ -1038,8 +1144,20 @@ postfix_expression:
 primary_expression:
     NAME
     {
-        SymEntry *e = checked_lookup($1);
-        $$ = new AstName(std::string($1), e->dtype);
+        std::string _n($1);
+        SymEntry *e = scope.lookup(_n);
+        if (!e) {
+            /* Maybe it's a procedure name used as a call target */
+            auto pit = scope.proc_decls.find(_n);
+            if (pit == scope.proc_decls.end() || !pit->second.declared) {
+                fprintf(stderr, "Error: undeclared variable '%s' at line %d\n", $1, line_number);
+                exit(1);
+            }
+            /* Use the procedure's return type so the postfix call rule can validate it */
+            $$ = new AstName(_n, pit->second.return_type);
+        } else {
+            $$ = new AstName(_n, e->dtype);
+        }
         free($1);
     }
 
