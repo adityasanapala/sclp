@@ -12,7 +12,7 @@ extern FILE *yyin;
 extern int yylex();
 extern int yyparse();
 extern int line_number;
-//extern AstProgram *the_program;
+extern AstProgram *the_program;
 
 int show_tokens   = 0;
 int show_ast      = 0;

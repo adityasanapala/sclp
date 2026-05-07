@@ -3,7 +3,7 @@
     #include <stdlib.h>
     #include <string.h>
     #include "ast.hpp"
-    #include "symtab.hpp"
+    //#include "symtab.hpp"
     #include "parser.tab.h"
 
     int line_number = 1;
@@ -18,8 +18,8 @@
 DIGIT       [0-9]
 LETTER      [a-zA-Z_]
 ID          {LETTER}({LETTER}|{DIGIT})*
-INTEGER     {DIGIT}+
-FLOAT       {DIGIT}+\.{DIGIT}+
+INT_LIT     {DIGIT}+
+FLOAT_LIT   {DIGIT}+\.{DIGIT}+
 
 %%
 
@@ -32,7 +32,7 @@ FLOAT       {DIGIT}+\.{DIGIT}+
 "bool"      { print_token("BOOL", yytext); return BOOL; }
 "string"    { print_token("STRING", yytext); return STRING; }
 "struct"    { print_token("STRUCT", yytext); return STRUCT; }
-"print"     { print_token("PRINT", yytext); return PRINT; }
+"print"     { print_token("WRITE", yytext); return WRITE; }
 "read"      { print_token("READ", yytext); return READ; }
 "while"     { print_token("WHILE", yytext); return WHILE; }
 "do"        { print_token("DO", yytext); return DO; }
@@ -41,13 +41,13 @@ FLOAT       {DIGIT}+\.{DIGIT}+
 "else"      { print_token("ELSE", yytext); return ELSE; }
 "return"    { print_token("RETURN", yytext); return RETURN; }
 
-{FLOAT}     {
+{FLOAT_LIT}     {
     yylval.float_value = atof(yytext);
     print_token("FLOAT_NUM", yytext); 
     return FLOAT_NUM; 
 }
 
-{INTEGER}   {
+{INT_LIT}   {
     yylval.integer_value = atoi(yytext);
     print_token("INT_NUM", yytext); 
     return INT_NUM; 
@@ -100,6 +100,9 @@ FLOAT       {DIGIT}+\.{DIGIT}+
 "]" { print_token("RIGHT_SQUARE_BRACKET", yytext); return RIGHT_SQUARE_BRACKET; }
 ";" { print_token("SEMICOLON", yytext); return SEMICOLON; }
 "," { print_token("COMMA", yytext); return COMMA; }
+"." { print_token("DOT", yytext); return DOT; }
+"?" { print_token("QUESTION_MARK", yytext); return QUESTION_MARK; }
+":" { print_token("COLON", yytext); return COLON; }
 
 .   {
     fprintf(stderr, "Error: Illegal character '%s' at line %d\n", yytext, line_number);

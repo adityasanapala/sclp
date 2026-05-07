@@ -33,8 +33,8 @@
     }
 
     static Type *arithRetType(Type *a, Type *b) {
-        if (a->base == TYPE_FLOAT || b->base == TYPE_FLOAT) return TYPE_FLOAT;
-        return TYPE_INT;
+        if (a->base == TYPE_FLOAT || b->base == TYPE_FLOAT) return new Type(TYPE_FLOAT);
+        return new Type(TYPE_INT);
     }
 
     static bool isArithType(Type *a) {
@@ -70,12 +70,12 @@
     static Type *ternaryRetType(Type *a, Type *b) {
         if (isSameType(a, b)) return a;
         if (isArithType(a) && isArithType(b)) return arithRetType(a, b);
-        return TYPE_VOID;
+        return new Type(TYPE_VOID);
     }
 
     static bool isAssignable(Type *a, Type *b) {
-        if (a == b) return true;
-        if (a == TYPE_FLOAT && b == TYPE_INT) return false;
+        if (isSameType(a, b)) return true;
+        if (a->base == TYPE_FLOAT && b->base == TYPE_INT) return true;
         return false;
     }
 
@@ -156,7 +156,7 @@
 %type <expr> relational_expression additive_expression
 %type <expr> multiplicative_expression unary_expression
 %type <expr> primary_expression postfix_expression
-%type <dtype> scalar_type
+%type <type> scalar_type array_type
 %type <paramlist> param_list param_list_nonempty
 %type <arglist> arg_list arg_list_nonempty
 %type <field_list> field_list
@@ -177,7 +177,7 @@ top_decl:
     VOID NAME LEFT_ROUND_BRACKET param_list RIGHT_ROUND_BRACKET
     {
         cur_proc_name = std::string($2); free($2);
-        cur_proc_rtype = TYPE_VOID;
+        cur_proc_rtype = new Type(TYPE_VOID);
         cur_params = $4;
     }
     proc_tail
@@ -189,6 +189,28 @@ top_decl:
         cur_decl_type = $1;
     }
     typed_name_tail
+    |
+    array_type NAME SEMICOLON
+    {
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, $1)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+        record_global(aname, $1);
+    }
+    |
+    array_type NAME COMMA
+    {
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, $1)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+        record_global(aname, $1);
+        cur_decl_type = $1;
+    }
+    global_var_tail SEMICOLON
     |
     STRUCT NAME LEFT_CURLY_BRACKET field_list RIGHT_CURLY_BRACKET SEMICOLON
     {
@@ -339,15 +361,52 @@ local_decl_list:
 
 local_decl:
     scalar_type { cur_decl_type = $1; } local_var_list SEMICOLON
+    |
+    array_type NAME SEMICOLON
+    {
+        Type *arr = $1;
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, arr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+    }
+    |
+    array_type NAME COMMA
+    {
+        Type *arr = $1;
+        std::string aname = std::string($2); free($2);
+        if (!scope.declare(aname, arr)) {
+            fprintf(stderr, "Error: redeclaration of '%s' at line %d\n", aname.c_str(), line_number);
+            exit(1);
+        }
+        cur_decl_type = arr;
+    }
+    local_var_list SEMICOLON
 ;
 
 /* Non-void scalar types */
 
 scalar_type:
-    INTEGER { $$ = TYPE_INT; }
-    | FLOAT { $$ = TYPE_FLOAT; }
-    | BOOL { $$ = TYPE_BOOL; }
-    | STRING { $$ = TYPE_STRING; }
+    INTEGER { $$ = new Type(TYPE_INT); }
+    | FLOAT { $$ = new Type(TYPE_FLOAT); }
+    | BOOL { $$ = new Type(TYPE_BOOL); }
+    | STRING { $$ = new Type(TYPE_STRING); }
+;
+
+/* Array type: e.g. int[5] */
+array_type:
+    scalar_type LEFT_SQUARE_BRACKET INT_NUM RIGHT_SQUARE_BRACKET
+    {
+        if ($3 <= 0) {
+            fprintf(stderr, "Error: array size must be positive at line %d\n", line_number);
+            exit(1);
+        }
+        Type *t = new Type(TYPE_ARRAY);
+        t->subtype = $1;
+        t->array_size = $3;
+        $$ = t;
+    }
 ;
 
 local_var_list:
@@ -385,9 +444,29 @@ param_list_nonempty:
         free($2);
     }
     |
+    array_type NAME
+    {
+        /* Arrays passed as pointers to their element type */
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $1->subtype;
+        $$ = new std::list<FormalParam>();
+        $$->push_back({std::string($2), ptr});
+        free($2);
+    }
+    |
     param_list_nonempty COMMA scalar_type NAME
     {
         $1->push_back({std::string($4), $3});
+        free($4);
+        $$ = $1;
+    }
+    |
+    param_list_nonempty COMMA array_type NAME
+    {
+        /* Arrays passed as pointers to their element type */
+        Type *ptr = new Type(TYPE_POINTER);
+        ptr->subtype = $3->subtype;
+        $1->push_back({std::string($4), ptr});
         free($4);
         $$ = $1;
     }
@@ -445,7 +524,7 @@ call_statement:
 return_statement:
     RETURN SEMICOLON
     {
-        if (cur_proc_rtype != TYPE_VOID) {
+        if (cur_proc_rtype->base != TYPE_VOID) {
             fprintf(stderr, "Error: return without value in non-void function at line %d\n", line_number);
             exit(1);
         }
@@ -455,7 +534,7 @@ return_statement:
     |
     RETURN expression SEMICOLON
     {
-        if (cur_proc_rtype == TYPE_VOID) {
+        if (cur_proc_rtype->base == TYPE_VOID) {
             fprintf(stderr, "Error: return with value in void function at line %d\n", line_number);
             exit(1);
         }
@@ -464,6 +543,8 @@ return_statement:
             fprintf(stderr, "Error: return type mismatch at line %d\n", line_number);
             exit(1);
         }
+
+        $$ = new AstReturn($2);
     }
 ;
 
@@ -489,7 +570,7 @@ compound_statement:
 while_statement:
     WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement
     {
-        if ($3->dtype != TYPE_BOOL) {
+        if ($3->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of while must be boolean at line %d\n", line_number);
             exit(1);
         }
@@ -501,7 +582,7 @@ while_statement:
 do_while_statement:
     DO body_statement WHILE LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET SEMICOLON
     {
-        if ($5->dtype != TYPE_BOOL) {
+        if ($5->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of do-while must be boolean at line %d\n", line_number);
             exit(1);
         }
@@ -513,19 +594,19 @@ do_while_statement:
 for_statement:
     FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON optional_statement RIGHT_ROUND_BRACKET body_statement
     {
-        if ($5 && $5->dtype != TYPE_BOOL) {
+        if ($5 && $5->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of for must be boolean at line %d\n", line_number);
             exit(1);
         }
 
-        $$ = new AstFor($3, $5, $7, $9)
+        $$ = new AstFor($3, $5, $7, $9);
     }
 ;
 
 if_else_statement:
     IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement ELSE body_statement
     {
-        if ($3->dtype != TYPE_BOOL) {
+        if ($3->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of if must be boolean at line %d\n", line_number);
             exit(1);
         }
@@ -536,7 +617,7 @@ if_else_statement:
 if_statement:
     IF LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET body_statement %prec LOWER_THAN_ELSE
     {
-        if ($3->dtype != TYPE_BOOL) {
+        if ($3->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of if must be boolean at line %d\n", line_number);
             exit(1);
         }
@@ -547,28 +628,24 @@ if_statement:
 assignment_statement:
     postfix_expression ASSIGN_OP expression SEMICOLON
     {
-        SymEntry *e = checked_lookup($1);
-        if (!isAssignable(e->dtype, $3->dtype)) {
+        if (!isAssignable($1->dtype, $3->dtype)) {
             fprintf(stderr, "Invalid assignment at line %d\n", line_number);
             exit(1);
         }
 
-        $$ = new AstAssignExpr(std::string($1), e->dtype, $3);
-        free($1);
+        $$ = new AstAssignExpr($1, $3);
     }
 ;
 
 assignment_expression:
     postfix_expression ASSIGN_OP expression
     {
-        SymEntry *e = checked_lookup($1);
-        if (!isAssignable(e->dtype, $3->dtype)) {
+        if (!isAssignable($1->dtype, $3->dtype)) {
             fprintf(stderr, "Invalid assignment at line %d\n", line_number);
             exit(1);
         }
 
-        $$ = new AstAssignExpr(std::string($1), e->dtype, $3);
-        free($1);
+        $$ = new AstAssignExpr($1, $3);
     }
 ;
 
@@ -582,7 +659,7 @@ read_statement:
         SymEntry *e = checked_lookup($2);
         if (!isArithType(e->dtype)) {
             fprintf(stderr, "Error: read is not supported for type '%s' at line %d\n",
-                    type_name(e->dtype), line_number);
+                    type_name(e->dtype).c_str(), line_number);
             exit(1);
         }
 
@@ -601,7 +678,7 @@ ternary_expression:
     logical_or_expression { $$ = $1; }
     | logical_or_expression QUESTION_MARK expression COLON ternary_expression
     {
-        if ($1->dtype != TYPE_BOOL || !ternaryComp($3->dtype, $5->dtype)) {
+        if ($1->dtype->base != TYPE_BOOL || !ternaryComp($3->dtype, $5->dtype)) {
             fprintf(stderr, "Ternary operator data types not compatible at line %d\n",
                     line_number);
             exit(1);
@@ -616,7 +693,7 @@ logical_or_expression:
     logical_and_expression { $$ = $1; }
     | logical_or_expression OR logical_and_expression
     {
-        if ($1->dtype != TYPE_BOOL || $3->dtype != TYPE_BOOL) {
+        if ($1->dtype->base != TYPE_BOOL || $3->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Incompatible data types for OR at line %d\n", line_number);
             exit(1);
         }
@@ -629,7 +706,7 @@ logical_and_expression:
     logical_not_expression { $$ = $1; }
     | logical_and_expression AND logical_not_expression
     {
-        if ($1->dtype != TYPE_BOOL || $3->dtype != TYPE_BOOL) {
+        if ($1->dtype->base != TYPE_BOOL || $3->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Incompatible data types for AND at line %d\n", line_number);
             exit(1);
         }
@@ -642,7 +719,7 @@ logical_not_expression:
     relational_expression { $$ = $1; }
     | NOT logical_not_expression
     {
-        if ($2->dtype != TYPE_BOOL) {
+        if ($2->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Incompatible data types for NOT at line %d\n", line_number);
             exit(1);
         }
@@ -805,30 +882,37 @@ postfix_expression:
     | postfix_expression LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
     {
         /* Function call as expression */
-        auto it = scope.proc_decls.find(std::string($1));
+        AstName *fn_name = dynamic_cast<AstName *>($1);
+        if (!fn_name) {
+            fprintf(stderr, "Error: call target is not a function name at line %d\n", line_number);
+            exit(1);
+        }
+        const std::string &fname = fn_name->name;
+
+        auto it = scope.proc_decls.find(fname);
 
         if (it == scope.proc_decls.end() || !it->second.declared) {
             fprintf(stderr, "Error: undeclared function '%s' at line %d\n",
-                    $1, line_number);
+                    fname.c_str(), line_number);
             exit(1);
         }
 
         Type *rt = it->second.return_type;
 
-        if (rt == TYPE_VOID) {
+        if (rt->base == TYPE_VOID) {
             fprintf(stderr,
                     "Error: void function '%s' used as expression at line %d\n",
-                    $1, line_number);
+                    fname.c_str(), line_number);
             exit(1);
         }
 
-        check_call_args($1, it->second.params, *$3);
+        check_call_args(fname.c_str(), it->second.params, *$3);
 
-        AstCallExpr *ce = new AstCallExpr(std::string($1), rt);
+        AstCallExpr *ce = new AstCallExpr(fname, rt);
         ce->args = *$3;
 
         delete $3;
-        free($1);
+        delete fn_name;
 
         $$ = ce;
     }
@@ -837,8 +921,8 @@ postfix_expression:
     {
         if ($1->dtype->base != TYPE_ARRAY &&
             $1->dtype->base != TYPE_POINTER) {
-            fprintf(stderr, "Error: indexing non-array '%s' at line %d\n",
-                    $1, line_number);
+            fprintf(stderr, "Error: indexing non-array at line %d\n",
+                    line_number);
             exit(1);
         }
 
@@ -870,7 +954,7 @@ postfix_expression:
 
         if (!t || offset < 0) {
             fprintf(stderr, "Unknown field '%s' at line %d\n",
-                    field, line_number);
+                    field.c_str(), line_number);
             exit(1);
         }
 
@@ -884,38 +968,6 @@ primary_expression:
         SymEntry *e = checked_lookup($1);
         $$ = new AstName(std::string($1), e->dtype);
         free($1);
-    }
-
-    | postfix_expression LEFT_ROUND_BRACKET arg_list RIGHT_ROUND_BRACKET
-    {
-        /* Function call as expression */
-
-        auto it = scope.proc_decls.find(std::string($1));
-
-        if (it == scope.proc_decls.end() || !it->second.declared) {
-            fprintf(stderr, "Error: undeclared function '%s' at line %d\n",
-                    $1, line_number);
-            exit(1);
-        }
-
-        Type *rt = it->second.return_type;
-
-        if (rt == TYPE_VOID) {
-            fprintf(stderr,
-                    "Error: void function '%s' used as expression at line %d\n",
-                    $1, line_number);
-            exit(1);
-        }
-
-        check_call_args($1, it->second.params, *$3);
-
-        AstCallExpr *ce = new AstCallExpr(std::string($1), rt);
-        ce->args = *$3;
-
-        delete $3;
-        free($1);
-
-        $$ = ce;
     }
 
     | INT_NUM { $$ = new AstIntNum($1); }
