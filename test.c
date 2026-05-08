@@ -4,8 +4,6 @@ void main() {
     int i;
     a = 4;
     b = 0;
-    for (i = 0; i < a; i++) {
-        b = b + a;
-    }
-    print b;
+    i = a + b;
+    print i;
 }

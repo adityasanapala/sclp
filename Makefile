@@ -4,7 +4,7 @@ YACC   = bison
 CFLAGS = -Wall -Wno-unused-function -Wno-sign-compare -std=c++11
 
 TARGET = sclp
-OBJS   = lex.yy.o parser.tab.o main.o tac.o rtl.o #spim.o
+OBJS   = lex.yy.o parser.tab.o main.o tac.o rtl.o spim.o
 
 all: $(TARGET)
 
@@ -29,10 +29,10 @@ tac.o: tac.cpp tac.hpp ast.hpp
 rtl.o: rtl.cpp rtl.hpp tac.hpp ast.hpp
 	$(CC) $(CFLAGS) -c rtl.cpp
 
-#spim.o: spim.cpp spim.hpp tac.hpp ast.hpp
-#	$(CC) $(CFLAGS) -c spim.cpp
+spim.o: spim.cpp spim.hpp tac.hpp ast.hpp
+	$(CC) $(CFLAGS) -c spim.cpp
 
-main.o: main.cpp ast.hpp tac.hpp rtl.hpp #spim.hpp parser.tab.h
+main.o: main.cpp ast.hpp tac.hpp rtl.hpp spim.hpp
 	$(CC) $(CFLAGS) -c main.cpp
 
 clean:
