@@ -722,7 +722,7 @@ do_while_statement:
 ;
 
 for_statement:
-    FOR LEFT_ROUND_BRACKET optional_statement SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
+    FOR LEFT_ROUND_BRACKET for_update SEMICOLON optional_expression SEMICOLON for_update RIGHT_ROUND_BRACKET body_statement
     {
         if ($5 && $5->dtype->base != TYPE_BOOL) {
             fprintf(stderr, "Error: condition of for must be boolean at line %d\n", line_number);
